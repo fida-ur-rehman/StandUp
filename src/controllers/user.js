@@ -1,8 +1,12 @@
 const userModel = require("../models/user");
 const authController = require("../controllers/auth");
 const bcrypt = require("bcrypt")
+const jwt = require("jsonwebtoken")
 const mongoose = require("mongoose");
+const { db } = require("../models/user");
 
+let JWT_AUTH_TOKEN = process.env.JWT_AUTH_TOKEN;
+let JWT_REFRESH_TOKEN = process.env.JWT_REFRESH_TOKEN;
 
 class User {
   async getAllUser(req, res) {
@@ -40,8 +44,14 @@ class User {
       } else {
         let dbUser = await  userModel.findOne({email: email})
         if(dbUser) {
-          console.log(dbUser)
-          return res.status(201).json({ result: "Already Exist", msg: "Error"});
+          // console.log(dbUser)
+          // if(dbUser.verified === false) {
+          //   authController.sendOTP(req, res)
+          // } else if (dbUser.pin === null) {
+          //   return res.status(200).json({ result: "Setup Pin", msg: "Success"});
+          // } else {
+            return res.status(201).json({ result: "Already Exist", msg: "Error"});
+          // }
         } else {
           let newUser = new userModel({
             name,
@@ -52,7 +62,7 @@ class User {
           newUser
             .save()
             .then((created) => {
-              console.log(created)
+              // console.log(created)
               authController.sendOTP(req, res)
             })
         }
@@ -106,10 +116,11 @@ async pinSetup(req, res) {
     } else {
       if(pin == confirmPin) {
         const _pin = await bcrypt.hash(pin, 10);
-        userModel.updateOne({email}, {$set: {pin: _pin}})
+        userModel.findOneAndUpdate({email}, {$set: {pin: _pin}})
         .then((updated) => {
-          console.log(updated)
-          return res.status(200).json({ result: "Pin Setup Completed", msg: "Success"});
+          // let accessToken = jwt.sign({ data: email }, JWT_AUTH_TOKEN, { expiresIn: '60s' });
+          let refreshToken = jwt.sign({ data: email }, JWT_REFRESH_TOKEN, { expiresIn: '1y' });
+          return res.status(200).json({ result: refreshToken, msg: "Success"});
         })
       } else {
         return res.status(201).json({ result: "Not Match", msg: "Error"});
