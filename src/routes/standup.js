@@ -3,10 +3,13 @@ const router = express.Router();
 const standupController = require("../controllers/standup");
 const { isAuthorized } = require("../middleware/auth");
 
-router.get("/allStandup", standupController.allStandup);
-router.post("/standup", standupController.getStandup);
-router.post("/createStandup", standupController.createStandup);
-router.post("/editStandup", standupController.editStandup);
+router.get("/all", isAuthorized, standupController.allStandup);
+router.post("/single", isAuthorized, standupController.getStandup);
+router.post("/create", isAuthorized, standupController.createStandup);
+router.post("/edit", isAuthorized, standupController.editStandup);
+router.post("/removeMember", isAuthorized, standupController.removeMember);
+router.post("/addMembers", isAuthorized, standupController.addMembers);
+// router.post("/delete", isAuthorized, standupController.editStandup);
 
 
 module.exports = router;

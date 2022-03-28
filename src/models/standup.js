@@ -17,7 +17,8 @@ const standupSchema = new mongoose.Schema(
     members: [
         { 
             role: {type: String, enum: userRoles, default: "Participants"},
-            userId: {type: ObjectId, ref: "User"}
+            userId: {type: ObjectId, ref: "User"},
+            email: {type: String}
         }
     ],
     statusTypes: {
