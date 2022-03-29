@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema(
     //   unique: true ,
     //   require: true,
     // },
+    verified: {type: Boolean, default: false},
     role: {
       type: String,
       enum: roles,

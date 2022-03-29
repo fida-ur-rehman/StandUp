@@ -36,6 +36,7 @@ mongoose
 // Routes
 app.use("/api/auth", require("./src/routes/auth"));
 app.use("/api/user", require("./src/routes/user"));
+app.use("/api/standup", require("./src/routes/standup"));
 
 app.get('/home', (req, res) => {
   res.send('Hello World!')
