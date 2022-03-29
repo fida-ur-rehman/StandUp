@@ -166,7 +166,7 @@ class Standup {
             })
 
             memberSetup.then( async() => {
-                let _standup = await standupModel.updateOne({_id: standupId}, {$addToSet: {members: {$each: _members}}})
+                let _standup = await standupModel.updateOne({_id: standupId}, {$addToSet: {members: {$each: _members}}}) //BUG
                 if(_standup.modifiedCount === 1) {
                     return res.status(200).json({ result: "Updated", msg: "Success" });
                 }
