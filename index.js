@@ -3,15 +3,17 @@ const express = require('express');
 const morgan = require("morgan")
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser")
+const cors = require("cors")
 const bcrypt = require("bcrypt")
 const crypto = require("crypto")
 require("dotenv").config()
 
 //CONSTANTS
 const app = express()
-const port = process.env.PORT || 3004
+const port = process.env.PORT || 3002
 
 //MIDDLEWAREs
+app.use(cors())
 app.use(morgan("dev"))
 app.use(bodyParser.urlencoded({
   extended: true
