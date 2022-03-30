@@ -6,15 +6,9 @@ const taskType = ['Epic', 'Bug', 'Blocker'];
 const statusSchema = new mongoose.Schema(
   {
     standupId: {type: ObjectId, ref: "Standup", require: true},
+    userId: {type: ObjectId, ref: "User", require: true},
     task: {},
-    status: {
-        
-    },
-    type: {
-        type: String,
-        enum: taskType,
-        require: true
-    },
+    status: {},
   },
   { timestamps: true }
 );

@@ -1,5 +1,8 @@
 const mongoose = require("mongoose");
+const { userSchema } = require("../models/user")
 const { ObjectId } = mongoose.Schema.Types;
+
+// console.log(userSchema)
 
 const statusTypes = ['Worked On', 'Working On', 'Blocker'];
 const userRoles = ['Admin', 'Watcher', 'Participants'];
@@ -17,8 +20,7 @@ const standupSchema = new mongoose.Schema(
     members: [
         { 
             role: {type: String, enum: userRoles, default: "Participants"},
-            userId: {type: ObjectId, ref: "User"},
-            email: {type: String}
+            user: {type: ObjectId, ref: "User", require: true},
         }
     ],
     statusTypes: {
