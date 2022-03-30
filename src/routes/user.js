@@ -3,8 +3,9 @@ const router = express.Router();
 const usersController = require("../controllers/user");
 const { isAuthorized } = require("../middleware/auth");
 
-router.get("/allUser", usersController.getAllUser);
-// router.get("/_user", usersController.getSingleUser);
+router.get("/all", isAuthorized, usersController.allUser);
+router.get("/single", isAuthorized, usersController.getUser);
+router.post("/singleId", isAuthorized, usersController.getUserById);
 router.post("/createUser", usersController.createUser);
 // router.delete("/user", usersController.getDeleteUser);
 router.post("/pinSetup", usersController.pinSetup);
