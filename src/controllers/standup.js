@@ -13,7 +13,8 @@ class Standup {
     try {
       let _standups = await standupModel
         .find({})
-        .sort({ _id: -1 });
+        .populate("members.user")
+        .sort({ _id: -1 })
       if (_standups) {
         return res.status(200).json({ result: _standups, msg: "Success"});
       }
