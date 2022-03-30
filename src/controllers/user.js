@@ -9,7 +9,7 @@ let JWT_AUTH_TOKEN = process.env.JWT_AUTH_TOKEN;
 let JWT_REFRESH_TOKEN = process.env.JWT_REFRESH_TOKEN;
 
 class User {
-  async getAllUser(req, res) {
+  async allUser(req, res) {
     try {
       let Users = await userModel
         .find({})
@@ -35,6 +35,24 @@ class User {
             res.status(500).json({ result: err, msg: "Error"});
       }
   }
+
+  async getUserById(req, res) {
+    try {
+      let { userId } = req.body;
+      if(!userId) {
+        return res.status(201).json({ result: "Data Missing", msg: "Error"});
+      } else {
+        let User = await userModel
+        .findOne({_id: userId})
+        if (User) {
+          return res.status(200).json({ result: User, msg: "Success"});
+        }
+      }
+    } catch (err) {
+          console.log(err)
+          res.status(500).json({ result: err, msg: "Error"});
+    }
+}
 
   async createUser(req, res) {
     try {
@@ -114,8 +132,10 @@ async pinSetup(req, res) {
     if( !pin || !confirmPin || !email) {
       return res.status(201).json({ result: "Data Missing", msg: "Error"});
     } else {
-      if(pin == confirmPin) {
-        const _pin = await bcrypt.hash(pin, 10);
+      let newPin = pin.toString();
+      let newConfirmPin = confirmPin.toString();
+      if(newPin === newConfirmPin) {
+        const _pin = await bcrypt.hash(newPin, 10);
         userModel.findOneAndUpdate({email}, {$set: {pin: _pin}})
         .then((updated) => {
           // let accessToken = jwt.sign({ data: email }, JWT_AUTH_TOKEN, { expiresIn: '60s' });

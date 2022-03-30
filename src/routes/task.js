@@ -3,11 +3,11 @@ const router = express.Router();
 const taskController = require("../controllers/task");
 const { isAuthorized } = require("../middleware/auth");
 
-router.get("/allStandup", taskController.allTask);
-router.post("/standup", taskController.getTask);
-router.post("/createStandup", taskController.craeteTask);
-router.post("/editStandup", taskController.editTask);
-router.post("/deleteTask", taskController.deleteTask);
+router.get("/all", isAuthorized, taskController.allTask);
+router.post("/single", isAuthorized, taskController.getTask);
+router.post("/create", isAuthorized, taskController.createTask);
+router.post("/edit", isAuthorized, taskController.editTask);
+router.post("/delete", isAuthorized, taskController.deleteTask);
 
 
 module.exports = router;

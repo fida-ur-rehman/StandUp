@@ -23,7 +23,6 @@ class Auth {
 
         console.log("OTP:" +""+otp)
         res.status(200).send({ email, hash: fullHash, otp });  // this bypass otp via api only for development instead hitting twilio api all the time
-
   };
 
   async verifyOTP(req, res){
@@ -77,7 +76,8 @@ class Auth {
           } else if (user.pin === null) {
             return res.status(201).json({ result: "Pin Setup Remaining", msg: "Error"});
           } else {
-            bcrypt.compare(pin, user.pin, function(err, result) {
+            let newPin = pin.toString();
+            bcrypt.compare(newPin, user.pin, function(err, result) {
               if(result == true) {
                 let refreshToken = jwt.sign({ data: email }, JWT_REFRESH_TOKEN, { expiresIn: '1y' });
                 return res.status(200).json({ result: refreshToken, msg: "Success"});
