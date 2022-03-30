@@ -114,8 +114,10 @@ async pinSetup(req, res) {
     if( !pin || !confirmPin || !email) {
       return res.status(201).json({ result: "Data Missing", msg: "Error"});
     } else {
-      if(pin == confirmPin) {
-        const _pin = await bcrypt.hash(pin, 10);
+      let newPin = pin.toString();
+      let newConfirmPin = confirmPin.toString();
+      if(newPin === newConfirmPin) {
+        const _pin = await bcrypt.hash(newPin, 10);
         userModel.findOneAndUpdate({email}, {$set: {pin: _pin}})
         .then((updated) => {
           // let accessToken = jwt.sign({ data: email }, JWT_AUTH_TOKEN, { expiresIn: '60s' });
