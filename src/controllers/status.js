@@ -1,18 +1,18 @@
-const taskModel = require("../models/task");
+const statusModel = require("../models/status");
 const authController = require("../controllers/auth");
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const mongoose = require("mongoose");
 
 
-class Task {
-  async allTask(req, res) {
+class Status {
+  async allStatus(req, res) {
     try {
-      let _task = await taskModel
+      let _status = await statusModel
         .find({})
         .sort({ _id: -1 });
-      if (_task) {
-        return res.status(200).json({ result: _task, msg: "Success"});
+      if (_status) {
+        return res.status(200).json({ result: _status, msg: "Success"});
       }
     } catch (err) {
         console.log(err)
@@ -20,15 +20,15 @@ class Task {
     }
   }
 
-  async getTask(req, res) {
+  async getStatus(req, res) {
       try {
-          let {taskId} = req.body;
-          if(!taskId) {
+          let {statusId} = req.body;
+          if(!statusId) {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
           } else {
-            let _task = await taskModel.findOne({_id: taskId})
-            if (_task) {
-            return res.status(200).json({ result: _task, msg: "Success"});
+            let _status = await statusModel.findOne({_id: statusId})
+            if (_status) {
+            return res.status(200).json({ result: _status, msg: "Success"});
             }
           }
       } catch (err) {
@@ -37,13 +37,47 @@ class Task {
       }
   }
 
-  async craeteTask(req, res) {
+  async standupStatusUser(req, res) {
+    try {
+        let { standupId, userId} = req.body;
+        if(!standupId || !userId) {
+          return res.status(201).json({ result: "Data Missing", msg: "Error"});
+        } else {
+          let _status = await statusModel.find({standupId, userId})
+          if (_status) {
+          return res.status(200).json({ result: _status, msg: "Success"});
+          }
+        }
+    } catch (err) {
+          console.log(err)
+          res.status(500).json({ result: err, msg: "Error"});
+    }
+}
+
+async standupStatus(req, res) {
+    try {
+        let { standupId} = req.body;
+        if(!standupId) {
+          return res.status(201).json({ result: "Data Missing", msg: "Error"});
+        } else {
+          let _status = await statusModel.find({standupId})
+          if (_status) {
+          return res.status(200).json({ result: _status, msg: "Success"});
+          }
+        }
+    } catch (err) {
+          console.log(err)
+          res.status(500).json({ result: err, msg: "Error"});
+    }
+}
+
+  async craeteStatus(req, res) {
     try {
       let { title, desc, taskId, taskType} = req.body
       if(!title || !desc || !taskId || taskType) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
-          let _task = new taskModel({
+          let _task = new statusModel({
             title,
             desc,
             taskId, //calculate unique
@@ -62,22 +96,22 @@ class Task {
     }
   }
 
-  async editTask(req, res) {
+  async editStatus(req, res) {
     try {
-        let {taskId} = req.body;
-          if(!taskId) {
+        let {statusId} = req.body;
+          if(!statusId) {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
           } else {
             const updateOps = {};
             for(const ops of req.body){
                 updateOps[ops.propName] = ops.value;
             }
-            let _task = await taskModel.updateOne({_id: taskId}, {
+            let _status = await statusModel.updateOne({_id: statusId}, {
                 $set: updateOps
             });
             console.log(updateOps)
-            if(_task) {
-            return res.status(200).json({ result: _task, msg: "Success" });
+            if(_status) {
+            return res.status(200).json({ result: _status, msg: "Success" });
             }
           }
     } catch (err) {
@@ -86,15 +120,15 @@ class Task {
     }
   }
 
-    async deleteTask(req, res) {
+    async deleteStatus(req, res) {
         try {
-            let {taskId} = req.body;
-            if(!taskId) {
+            let {statusId} = req.body;
+            if(!statusId) {
                 return res.status(201).json({ result: "Data Missing", msg: "Error"});
             } else {
-                let _task = await taskModel.remove({_id: taskId})
-                if(_task) {
-                return res.status(200).json({ result: _task, msg: "Success" });
+                let _status = await statusModel.remove({_id: statusId})
+                if(_status) {
+                return res.status(200).json({ result: _status, msg: "Success" });
                 }
             }
         } catch (err) {
@@ -104,5 +138,5 @@ class Task {
     }
 }
 
-const taskController = new Task();
-module.exports = taskController;
+const statusController = new Status();
+module.exports = statusController;

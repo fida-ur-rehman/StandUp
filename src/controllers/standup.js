@@ -1,5 +1,6 @@
 const standupModel = require("../models/standup");
-const userModel = require("../models/user")
+const {userModel} = require("../models/user")
+const shortid = require("shortid")
 const authController = require("../controllers/auth");
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
@@ -29,6 +30,7 @@ class Standup {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
           } else {
             let _standup = await standupModel.findOne({_id: standupId})
+            .populate("members.user")
             if (_standup) {
             return res.status(200).json({ result: _standup, msg: "Success"});
             }
@@ -56,8 +58,7 @@ class Standup {
 
             if(includeMe === true) {
                 let userDoc = {
-                    userId: req.user._id,
-                    email: req.user.email
+                    user: req.user._id,
                 }
                 _members.push(userDoc)
             }
@@ -68,8 +69,7 @@ class Standup {
                       _notMember.push(member)
                   } else {
                       let userDoc = {
-                          userId: user._id,
-                          email: user.email
+                          user: user._id
                       }
                       _members.push(userDoc)
                   }
@@ -156,8 +156,7 @@ class Standup {
                         _notMember.push(member)
                     } else {
                         let userDoc = {
-                            userId: user._id,
-                            email: user.email
+                            user: user._id
                         }
                         _members.push(userDoc)
                     }

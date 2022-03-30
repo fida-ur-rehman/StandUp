@@ -1,4 +1,4 @@
-const User = require("../models/user");
+const {userModel} = require("../models/user");
 const jwt = require("jsonwebtoken");
 
 module.exports.isAuthorized  = function(req, res, next) {
@@ -8,7 +8,7 @@ module.exports.isAuthorized  = function(req, res, next) {
             return res.status(401).json({ result: "Unauthorised", msg: "Error"});
         } else {
             let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-            User.findOne({email: decoded.data}).then((user) => {
+            userModel.findOne({email: decoded.data}).then((user) => {
                 req.user = user  
                     if (user === null) {     
                         return res.status(401).json({ result: "Unauthorised", msg: "Error"});

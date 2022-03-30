@@ -1,9 +1,9 @@
-const userModel = require("../models/user");
+const {userModel} = require("../models/user");
 const authController = require("../controllers/auth");
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const mongoose = require("mongoose");
-const { db } = require("../models/user");
+
 
 let JWT_AUTH_TOKEN = process.env.JWT_AUTH_TOKEN;
 let JWT_REFRESH_TOKEN = process.env.JWT_REFRESH_TOKEN;
