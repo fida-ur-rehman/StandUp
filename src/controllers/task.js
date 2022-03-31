@@ -1,4 +1,5 @@
-const taskModel = require("../models/task");
+const {taskModel} = require("../models/task");
+const {activity} = require("../middleware/activity")
 const shortid = require("shortid")
 
 class Task {
@@ -52,6 +53,7 @@ class Task {
           _task
             .save()
             .then((created) => {
+                activity(created._id, "New Task", "Task", null, standupId, null, null)
                 return res.status(200).json({ result: _task, msg: "Success"});
             })
       }
