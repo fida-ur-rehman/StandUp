@@ -21,7 +21,7 @@ app.use(bodyParser.json())
 
 //DATABSE CONNECTION
 mongoose
-  .connect('mongodb://localhost:27017/standup', {
+  .connect(process.env.DATABASE, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     // useCreateIndex: true,
