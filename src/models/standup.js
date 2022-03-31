@@ -19,8 +19,9 @@ const standupSchema = new mongoose.Schema(
     },
     members: [
         { 
-            role: {type: String, enum: userRoles, default: "Participants"},
-            user: {type: ObjectId, ref: "User", require: true},
+            user: {
+                role: {type: String, enum: userRoles, default: "Participants"},
+                details: {type: ObjectId, ref: "User", require: true},}
         }
     ],
     statusTypes: {
@@ -32,5 +33,5 @@ const standupSchema = new mongoose.Schema(
 );
 
 
-const Standup = mongoose.model("Standup", standupSchema);
-module.exports = Standup;
+const standupModel = mongoose.model("Standup", standupSchema);
+module.exports = {standupModel, standupSchema};

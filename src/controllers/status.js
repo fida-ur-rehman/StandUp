@@ -1,4 +1,4 @@
-const statusModel = require("../models/status");
+const {statusModel} = require("../models/status");
 const authController = require("../controllers/auth");
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
@@ -22,6 +22,7 @@ class Status {
 
   async getStatus(req, res) {
       try {
+          console.log("A")
           let {statusId} = req.body;
           if(!statusId) {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
@@ -37,13 +38,22 @@ class Status {
       }
   }
 
-  async standupStatusUser(req, res) {
+  async standupUserStatus(req, res) {
     try {
         let { standupId, userId} = req.body;
         if(!standupId || !userId) {
           return res.status(201).json({ result: "Data Missing", msg: "Error"});
         } else {
-          let _status = await statusModel.find({standupId, userId})
+          let _status = await statusModel.aggregate([
+            { $match: 
+                {
+                  standupId: new mongoose.Types.ObjectId(standupId),
+                  userId: new mongoose.Types.ObjectId(userId)
+                }
+              }
+          ])
+
+        console.log(_status)
           if (_status) {
           return res.status(200).json({ result: _status, msg: "Success"});
           }
@@ -73,21 +83,20 @@ async standupStatus(req, res) {
 
   async craeteStatus(req, res) {
     try {
-      let { title, desc, taskId, taskType} = req.body
-      if(!title || !desc || !taskId || taskType) {
+      let { standupId, taskId, status} = req.body
+      if(!standupId || !taskId || !status ) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
-          let _task = new statusModel({
-            title,
-            desc,
-            taskId, //calculate unique
+          let _status = new statusModel({
+            standupId,
             userId: req.user._id,
-            taskType
+            taskId,
+            status
           });
-          _task
+          _status
             .save()
             .then((created) => {
-                return res.status(200).json({ result: _task, msg: "Success"});
+                return res.status(200).json({ result: created, msg: "Success"});
             })
       }
     } catch (err) {
@@ -103,14 +112,14 @@ async standupStatus(req, res) {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
           } else {
             const updateOps = {};
-            for(const ops of req.body){
+            for(const ops of req.body.data){
                 updateOps[ops.propName] = ops.value;
             }
             let _status = await statusModel.updateOne({_id: statusId}, {
                 $set: updateOps
             });
             console.log(updateOps)
-            if(_status) {
+            if(_status.modifiedCount === 1) {
             return res.status(200).json({ result: _status, msg: "Success" });
             }
           }
@@ -127,8 +136,10 @@ async standupStatus(req, res) {
                 return res.status(201).json({ result: "Data Missing", msg: "Error"});
             } else {
                 let _status = await statusModel.remove({_id: statusId})
-                if(_status) {
-                return res.status(200).json({ result: _status, msg: "Success" });
+                if(_status.deletedCount === 1) {
+                    return res.status(200).json({ result: "Deleted", msg: "Success" });
+                } else {
+                    return res.status(201).json({ result: "Not Deleted", msg: "Error"});
                 }
             }
         } catch (err) {

@@ -1,4 +1,4 @@
-const standupModel = require("../models/standup");
+const {standupModel} = require("../models/standup");
 const {userModel} = require("../models/user")
 const shortid = require("shortid")
 const authController = require("../controllers/auth");
@@ -6,17 +6,18 @@ const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const mongoose = require("mongoose");
 const { promise } = require("bcrypt/promises");
-
+const {activity} = require("../middleware/activity")
 
 class Standup {
   async allStandup(req, res) {
     try {
       let _standups = await standupModel
         .find({})
-        .populate("members.user")
+        .populate("members.user.details")
         .sort({ _id: -1 })
       if (_standups) {
         return res.status(200).json({ result: _standups, msg: "Success"});
+        
       }
     } catch (err) {
         console.log(err)
@@ -31,7 +32,7 @@ class Standup {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
           } else {
             let _standup = await standupModel.findOne({_id: standupId})
-            .populate("members.user")
+            .populate("members.user.details")
             if (_standup) {
             return res.status(200).json({ result: _standup, msg: "Success"});
             }
@@ -42,6 +43,24 @@ class Standup {
       }
   }
 
+  async userStandup(req, res) {
+    try {
+          let _standup = await standupModel.aggregate([
+            { $match: 
+              {
+                members: {$elemMatch: {user: req.user._id}}
+              }
+            }
+          ])
+          if (_standup) {
+          return res.status(200).json({ result: _standup, msg: "Success"});
+          }
+    } catch (err) {
+          console.log(err)
+          res.status(500).json({ result: err, msg: "Error"});
+    }
+}
+
   async createStandup(req, res) {
     try {
       let { name, teamName, members, includeMe, statusTypes} = req.body
@@ -50,6 +69,7 @@ class Standup {
       } else {
           let _members = [] //INVITE
           let _notMember = []
+          let _users = []
 
           let memberSetup = new Promise((resolve, reject) => {
 
@@ -59,7 +79,10 @@ class Standup {
 
             if(includeMe === true) {
                 let userDoc = {
-                    user: req.user._id,
+                    user: {
+                      details: req.user._id,
+                      role: "Admin"
+                    },
                 }
                 _members.push(userDoc)
             }
@@ -70,9 +93,10 @@ class Standup {
                       _notMember.push(member)
                   } else {
                       let userDoc = {
-                          user: user._id
+                          user: {details: user._id}
                       }
                       _members.push(userDoc)
+                      _users.push(user._id)
                   }
                   if (index === members.length -1) resolve();
             })
@@ -88,7 +112,9 @@ class Standup {
               _standup
                 .save()
                 .then((created) => {
+                  activity(created._id, "New StandUp", "Standup", _users, null, null)
                     return res.status(200).json({ result: created, msg: "Success"});
+                    //Activity
                 })
           })
       }
@@ -128,10 +154,16 @@ class Standup {
           if(!standupId || !email) {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
           } else {
-
-            let _standup = await standupModel.updateOne({_id: standupId}, {$pull: {members: {email: email}}})
-            if(_standup.modifiedCount === 1) {
-                return res.status(200).json({ result: "Updated", msg: "Success" });
+            let _user = await userModel.findOne({email})
+            if(_user) {
+              let _standup = await standupModel.updateOne({_id: standupId}, {$pull: {members: {"user.details": _user._id}}})
+              if(_standup.modifiedCount === 1) {
+                  return res.status(200).json({ result: "Updated", msg: "Success" });
+              } else {
+                return res.status(201).json({ result: "Not Updated", msg: "Error"});
+              }
+            } else {
+              return res.status(201).json({ result: "Not Found", msg: "Error"});
             }
           }
     } catch (err) {
@@ -157,7 +189,7 @@ class Standup {
                         _notMember.push(member)
                     } else {
                         let userDoc = {
-                            user: user._id
+                            user: {details: user._id}
                         }
                         _members.push(userDoc)
                     }
@@ -166,9 +198,11 @@ class Standup {
             })
 
             memberSetup.then( async() => {
-                let _standup = await standupModel.updateOne({_id: standupId}, {$addToSet: {members: {$each: _members}}}) //BUG
+                let _standup = await standupModel.updateOne({_id: standupId}, {$addToSet: {members: _members}}) //BUG
                 if(_standup.modifiedCount === 1) {
                     return res.status(200).json({ result: "Updated", msg: "Success" });
+                } else {
+                  return res.status(200).json({ result: "Not Updated", msg: "Error" });
                 }
               })
           }
@@ -178,22 +212,24 @@ class Standup {
     }
   }
 
-
-//   async deleteStandup(req, res) {
-//     let { oId, status } = req.body;
-//     if (!oId || !status) {
-//       return res.json({ message: "All filled must be required" });
-//     } else {
-//       let currentUser = userModel.findByIdAndUpdate(oId, {
-//         status: status,
-//         updatedAt: Date.now(),
-//       });
-//       currentUser.exec((err, result) => {
-//         if (err) console.log(err);
-//         return res.json({ success: "User updated successfully" });
-//       });
-//     }
-//   }
+  async delete(req, res) {
+      try {
+        let {standupId} = req.body;
+        if(!standupId) {
+            return res.status(201).json({ result: "Data Missing", msg: "Error"});
+        } else {
+            let _standup = await standupModel.remove({_id: standupId})
+            if(_standup.deletedCount === 1) {
+                return res.status(200).json({ result: "Deleted", msg: "Success" });
+            } else {
+                return res.status(201).json({ result: "Not Found", msg: "Error"});
+            }
+        }
+    } catch (err) {
+    console.log(err)
+    return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
 }
 
 const standupController = new Standup();

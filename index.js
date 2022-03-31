@@ -37,6 +37,9 @@ app.use("/api/auth", require("./src/routes/auth"));
 app.use("/api/user", require("./src/routes/user"));
 app.use("/api/standup", require("./src/routes/standup"));
 app.use("/api/task", require("./src/routes/task"));
+app.use("/api/status", require("./src/routes/status"));
+app.use("/api/comment", require("./src/routes/comment"));
+app.use("/api/activity", require("./src/routes/activity"));
 
 app.get('/home', (req, res) => {
   res.send('Hello World!')
