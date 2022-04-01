@@ -7,6 +7,10 @@ const commentSchema = new mongoose.Schema(
   {
     standupId: {type: ObjectId, ref: "Standup", require: true},
     userId: {type: ObjectId, ref: "User", require: true},
+    userName: {
+      type: String,
+      require: true
+    },
     entityId: {
         type: ObjectId, 
         require: true
