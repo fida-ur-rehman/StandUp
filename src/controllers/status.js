@@ -1,4 +1,5 @@
 const {statusModel} = require("../models/status");
+const { commentModel } = require("../models/comment")
 const authController = require("../controllers/auth");
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
@@ -53,9 +54,18 @@ class Status {
               }
           ])
 
+          let _Comment = await commentModel.aggregate([
+            { $match: 
+              {
+                standupId: new mongoose.Types.ObjectId(standupId),
+                entityId: new mongoose.Types.ObjectId(userId)
+              }
+            }
+          ])
+
         console.log(_status)
           if (_status) {
-          return res.status(200).json({ result: _status, msg: "Success"});
+          return res.status(200).json({ result: {_status, _Comment}, msg: "Success"});
           }
         }
     } catch (err) {
