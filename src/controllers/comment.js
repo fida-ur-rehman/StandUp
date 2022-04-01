@@ -75,6 +75,7 @@ class Comment {
           let _comment = new commentModel({
             standupId,
             userId: req.user._id,
+            userName: req.user.name,
             entityId,
             collectionName,
             text
