@@ -1,6 +1,8 @@
 const {taskModel} = require("../models/task");
 const {activity} = require("../middleware/activity")
-const shortid = require("shortid")
+const shortid = require("shortid");
+const { standupModel } = require("../models/standup");
+const { default: mongoose } = require("mongoose");
 
 class Task {
   async allTask(req, res) {
@@ -35,6 +37,44 @@ class Task {
             res.status(500).json({ result: err, msg: "Error"});
       }
   }
+
+  async userTask(req, res) {
+    try {
+      let _userStandup = await standupModel.aggregate([
+        { $match: 
+          {
+            members: {$elemMatch: {"user.details": req.user._id}}
+          }
+        },
+        {
+          $group:{_id:null, array:{$push:"$_id"}}
+      },
+        {
+          $project: {
+            array:true,_id:false
+          }
+        }
+      ])
+      
+          // let _task = await taskModel.findOne({_id: taskId})
+          // console.log(_task)
+          if (_userStandup) {
+            let _userStandup1 = _userStandup[0].array
+     
+              let task = taskModel.find({}, {standupId: new mongoose.Types.ObjectId("6245846302e3437d31c10bbf")})
+              if(task){
+                console.log(task)
+              }
+            
+              // console.log(_userTask)
+          return res.status(200).json({ result: _userStandup, msg: "Success"});
+          }
+        
+    } catch (err) {
+          console.log(err)
+          res.status(500).json({ result: err, msg: "Error"});
+    }
+}
 
   async createTask(req, res) {
     try {

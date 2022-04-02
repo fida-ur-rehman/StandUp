@@ -48,7 +48,7 @@ class Standup {
           let _standup = await standupModel.aggregate([
             { $match: 
               {
-                members: {$elemMatch: {user: req.user._id}}
+                members: {$elemMatch: {"user.details": req.user._id}}
               }
             }
           ])
