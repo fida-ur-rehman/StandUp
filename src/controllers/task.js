@@ -1,8 +1,10 @@
 const {taskModel} = require("../models/task");
+const mongoose = require("mongoose")
 const {activity} = require("../middleware/activity")
 const shortid = require("shortid");
 const { standupModel } = require("../models/standup");
-const { default: mongoose } = require("mongoose");
+const { commentModel } = require("../models/comment");
+const { statusModel } = require("../models/status");
 
 class Task {
   async allTask(req, res) {
@@ -25,7 +27,7 @@ class Task {
           if(!taskId) {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
           } else {
-            let _task = await taskModel.findOne({_id: taskId})
+            let _task = await taskModel.findOne({_id: mongoose.Types.ObjectId(taskId)})
             console.log(_task)
             if (_task) {
                 console.log(_task)
@@ -56,18 +58,13 @@ class Task {
         }
       ])
       
-          // let _task = await taskModel.findOne({_id: taskId})
-          // console.log(_task)
           if (_userStandup) {
             let _userStandup1 = _userStandup[0].array
-     
-              let task = taskModel.find({}, {standupId: new mongoose.Types.ObjectId("6245846302e3437d31c10bbf")})
-              if(task){
-                console.log(task)
+        
+              let _task = await taskModel.find({standupId: _userStandup1})
+              if(_task){
+                return res.status(200).json({ result: _task, msg: "Success"});
               }
-            
-              // console.log(_userTask)
-          return res.status(200).json({ result: _userStandup, msg: "Success"});
           }
         
     } catch (err) {
@@ -75,6 +72,29 @@ class Task {
           res.status(500).json({ result: err, msg: "Error"});
     }
 }
+
+async taskDetails(req, res) {
+  try {
+    let {taskId} = req.body;
+    if(!taskId) {
+      return res.status(201).json({ result: "Data Missing", msg: "Error"});
+    } else {
+      let taskStatus = await statusModel.find({taskId})
+      let taskComments = await commentModel.find({entityId: taskId})
+      if(taskStatus && taskComments) {
+        return res.status(200).json({ result: {taskStatus, taskComments}, msg: "Success"});
+      } else {
+        return res.status(201).json({ result: "Not Found", msg: "Error"});
+      }
+    }
+  } catch (err) {
+        console.log(err)
+        res.status(500).json({ result: err, msg: "Error"});
+  }
+}
+
+
+
 
   async createTask(req, res) {
     try {
