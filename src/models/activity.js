@@ -18,7 +18,8 @@ const activitySchema = new mongoose.Schema(
     users: [{type: ObjectId, ref: "User"}],
     userName: {
       type: String,
-      require: true
+      require: true,
+      default: "No Details"
     }
   },
   { timestamps: true }
