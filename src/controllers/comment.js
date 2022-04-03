@@ -83,7 +83,7 @@ class Comment {
           _comment
             .save()
             .then((created) => {
-                activity(created._id, "New Comment", "Comment", null, null, entityId, collectionName)
+                activity(created._id, "New Comment", "Comment", null, null, entityId, collectionName, req.user.name)
                 return res.status(200).json({ result: _comment, msg: "Success"});
             })
       }
