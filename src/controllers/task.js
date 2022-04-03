@@ -113,7 +113,7 @@ async taskDetails(req, res) {
           _task
             .save()
             .then((created) => {
-                activity(created._id, "New Task", "Task", null, standupId, null, null)
+                activity(created._id, "New Task", "Task", null, standupId, null, null, req.user.name)
                 return res.status(200).json({ result: _task, msg: "Success"});
             })
       }

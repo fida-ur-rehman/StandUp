@@ -112,7 +112,7 @@ class Standup {
               _standup
                 .save()
                 .then((created) => {
-                  activity(created._id, "New StandUp", "Standup", _users, null, null, null)
+                  activity(created._id, "New StandUp", "Standup", _users, null, null, null, req.user.name)
                     return res.status(200).json({ result: created, msg: "Success"});
                     //Activity
                 })

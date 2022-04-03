@@ -15,7 +15,11 @@ const activitySchema = new mongoose.Schema(
         enum: ['Standup', "Task", "Comment"],
         require: true
     },
-    users: [{type: ObjectId, ref: "User"}]
+    users: [{type: ObjectId, ref: "User"}],
+    userName: {
+      type: String,
+      require: true
+    }
   },
   { timestamps: true }
 );

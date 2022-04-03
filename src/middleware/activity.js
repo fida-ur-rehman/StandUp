@@ -5,14 +5,15 @@ const { userModel } = require("../models/user");
 const mongoose = require("mongoose")
 const jwt = require("jsonwebtoken");
 
-module.exports.activity = function (itemId, title, schema, users, standupId, entityId, collectionName) {
+module.exports.activity = function (itemId, title, schema, users, standupId, entityId, collectionName, userName) {
     try {
         if(!standupId && !entityId && !collectionName) { //standup Creation 
             let _activity = new activityModel({
                 itemId,
                 title,
                 schema,
-                users
+                users,
+                userName
               });
               _activity
                 .save()
@@ -37,7 +38,8 @@ module.exports.activity = function (itemId, title, schema, users, standupId, ent
                     itemId,
                     title,
                     schema,
-                    users: users1
+                    users: users1,
+                    userName
                   });
                   _activity
                     .save()
@@ -55,7 +57,8 @@ module.exports.activity = function (itemId, title, schema, users, standupId, ent
                             itemId,
                             title,
                             schema,
-                            users: users2
+                            users: users2,
+                            userName
                           });
                           _activity
                             .save()
@@ -69,7 +72,8 @@ module.exports.activity = function (itemId, title, schema, users, standupId, ent
                             itemId,
                             title,
                             schema,
-                            users: entityId
+                            users: entityId,
+                            userName
                           });
                           _activity
                             .save()
