@@ -9,7 +9,7 @@ const statusSchema = new mongoose.Schema(
   {
     standupId: {type: ObjectId, ref: "Standup", require: true},
     userId: {type: ObjectId, ref: "User", require: true},
-    task: {type: ObjectId, ref: "Task", require: true},
+    taskId: {type: ObjectId, ref: "Task", require: true},
     status: {},
   },
   { timestamps: true }

@@ -2,6 +2,7 @@ const {activityModel} = require("../models/activity");
 const {standupModel} = require("../models/standup")
 const {taskModel} = require("../models/task")
 const { userModel } = require("../models/user");
+const mongoose = require("mongoose")
 const jwt = require("jsonwebtoken");
 
 module.exports.activity = function (itemId, title, schema, users, standupId, entityId, collectionName) {
@@ -22,7 +23,7 @@ module.exports.activity = function (itemId, title, schema, users, standupId, ent
             let users1 = []
 
             let usersSetup =  new Promise((resolve, reject) => {
-                standupModel.findOne({_id: standupId})
+                standupModel.findOne({_id: mongoose.Types.ObjectId(standupId)})
                 .then((standup) => {
                     standup.members.forEach( async (member, index) => {
                         users1.push(member.user.details._id)
