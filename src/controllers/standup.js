@@ -45,62 +45,66 @@ class Standup {
 
   async userStandup(req, res) {
     try {
-          let _standup = await standupModel.aggregate([
-            { $match: 
-              {
-                members: {$elemMatch: {"user.details": req.user._id}}
-              }},
-              {
-                $unwind: {
-                  path: '$members'
-                }
-              },
-              {
-                $lookup: {
-                    from: 'users',
-                    localField: 'members.user.details',
-                    foreignField: '_id',
-                    as: 'members.user.details'
-                }
-            },
-            {
-              $unwind: {
-                  path: '$members.user.details'
-              }
-          },
-          {
-            $group: {
-                _id: '$_id',
-                members: {
-                    $push: '$members.user'
-                }
-            }
-        },
-        {
-          $lookup: {
-              from: 'standups',
-              localField: '_id',
-              foreignField: '_id',
-              as: 'standupDetails'
-          }
-      },
-      {
-        $unwind: {
-          path: '$standupDetails'
-      }
-      },
-      {
-        $addFields: {
-            'standupDetails.members': '$members'
-        }
-    },
-    {
-      $replaceRoot: {
-          newRoot: '$standupDetails'
-      }
-  }
+      let _standup = await standupModel.find({"members.user.details": req.user._id})
+                                        .populate("members.user.details")
+  //         let _standup = await standupModel.aggregate([
+  //           { $match: 
+  //             {
+  //               members: {$elemMatch: {"user.details": req.user._id}}
+  //             }},
+  //             {
+  //               $unwind: {
+  //                 path: '$members'
+  //               }
+  //             },
+  //             {
+  //               $lookup: {
+  //                   from: 'users',
+  //                   localField: 'members.user.details',
+  //                   foreignField: '_id',
+  //                   as: 'members.user.details'
+  //               }
+  //           },
+  //           {
+  //             $unwind: {
+  //                 path: '$members.user.details'
+  //             }
+  //         },
+  //         {
+  //           $group: {
+  //               _id: '$_id',
+  //               members: {
+  //                 $push: '$members.user'
+  //               }
+                   
+                
+  //           }
+  //       },
+  //       {
+  //         $lookup: {
+  //             from: 'standups',
+  //             localField: '_id',
+  //             foreignField: '_id',
+  //             as: 'standupDetails'
+  //         }
+  //     },
+  //     {
+  //       $unwind: {
+  //         path: '$standupDetails'
+  //     }
+  //     },
+  //     {
+  //       $addFields: {
+  //           'standupDetails.members': '$members'
+  //       }
+  //   },
+  //   {
+  //     $replaceRoot: {
+  //         newRoot: '$standupDetails'
+  //     }
+  // }
 
-          ])
+  //         ])
           if (_standup) {
           return res.status(200).json({ result: _standup, msg: "Success"});
           }

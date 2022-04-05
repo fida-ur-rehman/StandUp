@@ -126,31 +126,102 @@ class User {
 //     }
 //   }
 
-async pinSetup(req, res) {
-  try {
-    let {pin, confirmPin, email} = req.body;
-    if( !pin || !confirmPin || !email) {
-      return res.status(201).json({ result: "Data Missing", msg: "Error"});
-    } else {
-      let newPin = pin.toString();
-      let newConfirmPin = confirmPin.toString();
-      if(newPin === newConfirmPin) {
-        const _pin = await bcrypt.hash(newPin, 10);
-        userModel.findOneAndUpdate({email}, {$set: {pin: _pin}})
-        .then((updated) => {
-          // let accessToken = jwt.sign({ data: email }, JWT_AUTH_TOKEN, { expiresIn: '60s' });
-          let refreshToken = jwt.sign({ data: email }, JWT_REFRESH_TOKEN, { expiresIn: '1y' });
-          return res.status(200).json({ result: refreshToken, msg: "Success"});
-        })
+  async pinSetup(req, res) {
+    try {
+      let {pin, confirmPin, email} = req.body;
+      if( !pin || !confirmPin || !email) {
+        return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
-        return res.status(201).json({ result: "Not Match", msg: "Error"});
+        let newPin = pin.toString();
+        let newConfirmPin = confirmPin.toString();
+        if(newPin === newConfirmPin) {
+          const _pin = await bcrypt.hash(newPin, 10);
+          userModel.findOneAndUpdate({email}, {$set: {pin: _pin}})
+          .then((updated) => {
+            // let accessToken = jwt.sign({ data: email }, JWT_AUTH_TOKEN, { expiresIn: '60s' });
+            let refreshToken = jwt.sign({ data: email }, JWT_REFRESH_TOKEN, { expiresIn: '1y' });
+            return res.status(200).json({ result: refreshToken, msg: "Success"});
+          })
+        } else {
+          return res.status(201).json({ result: "Not Match", msg: "Error"});
+        }
+      }
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
+
+    async upload(req, res) {
+      try {
+        await userModel.updateOne({_id: req.user._id}, {$set: {img: req.file.filename}})
+        .then(result => {console.log(result)})
+        .catch(err => {console.log(err)})
+        res.json({file: req.file})
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+    }
+
+    async getAllUploads(req, res) {
+      try {
+          let gfs = require("../../index")
+          gfs.files.find().toArray((err, files) => {
+            if(!files || files.length === 0){
+              return res.status(404).json({
+                err: "no file exist"
+              });
+            }
+            return res.json(files);
+          })
+      } catch (err) {
+        console.log(err)
+        return res.status(500).json({ result: err, msg: "Error"});
       }
     }
-  } catch (err) {
-    console.log(err)
-    return res.status(500).json({ result: err, msg: "Error"});
-  }
-}
+
+    async getSingleUpload(req, res) {
+      try {
+        let gfs = require("../../index")
+        gfs.files.findOne({filename: req.params.filename} , (err, files) => {
+          if(!files || files.length === 0){
+            return res.status(404).json({
+              err: "no file exist"
+            });
+          }
+          
+          return res.json(files);
+        }) 
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+    }
+
+    async getSingleImg(req, res) {
+      try {
+        let gfs = require("../../index")
+        gfs.files.findOne({filename: req.params.filename} , (err, file) => {
+          if(!file || file.length === 0){
+            return res.status(404).json({
+              err: "no file exist"
+            });
+          }
+          if(file.contentType === "image/jpeg" || file.contentType === "image/png" || file.contentType === "image/jpg"){
+            const readstream = gfs.createReadStream(file.filename);
+            readstream.pipe(res);
+          } else {
+            res.status(404).json({
+              err: "not An Image"
+            });
+          }
+        })
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+    }
 }
 
 const userController = new User();

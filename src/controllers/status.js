@@ -97,6 +97,7 @@ async standupStatus(req, res) {
       if(!standupId || !taskId || !status ) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
+        console.log(taskId, standupId,status)
           let _status = new statusModel({
             standupId,
             userId: req.user._id,
