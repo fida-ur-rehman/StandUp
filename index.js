@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser")
 const bcrypt = require("bcrypt")
 const crypto = require("crypto")
+const Grid = require("gridfs-stream")
 require("dotenv").config()
 
 //CONSTANTS
@@ -31,6 +32,18 @@ mongoose
     console.log(err)
     console.log("NOT CONNECTED TO DB")
   })
+
+const conn = mongoose.connection
+
+conn.on('error', console.error.bind(console, "Error connecting to db"));
+
+let gfs;
+// Grid Stream Intt
+conn.once('open', async () => {
+  gfs = Grid(conn.db, mongoose.mongo);
+  gfs.collection("uploads")
+  module.exports = gfs;
+})
 
 // Routes
 app.use("/api/auth", require("./src/routes/auth"));

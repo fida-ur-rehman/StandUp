@@ -34,6 +34,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       require: true
     },
+    img: {
+      type: String,
+      default: null
+    },
     pin: {
       type: String,
       default: null
