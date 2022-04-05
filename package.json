@@ -16,12 +16,7 @@
     "express": "^4.17.3",
     "gridfs-stream": "^1.1.1",
     "jsonwebtoken": "^8.5.1",
-<<<<<<< HEAD
-    "lodash": "^4.17.21",
-    "mongoose": "^6.2.8",
-=======
     "mongoose": "^5.13.7",
->>>>>>> fa5c7f411d1cd0cb6b1fd4b3d2e61fffe8d4d791
     "morgan": "^1.10.0",
     "multer": "^1.4.4",
     "multer-gridfs-storage": "^5.0.2",
