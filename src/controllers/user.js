@@ -91,19 +91,22 @@ class User {
     }
   }
 
-  async EditUser(req, res) {
+  async edit(req, res) {
     try {
       const updateOps = {};
-      for(const ops of req.body){
+      for(const ops of req.body.data){
           updateOps[ops.propName] = ops.value;
       }
-      let currentUser = await userModel.updateOne({_id: req.user._id}, {
-        $set: updateOps
-      });
-      console.log(updateOps)
-        if(currentUser) {
-          return res.status(200).json({ result: currentUser, msg: "Success" });
+      let currentUser = await userModel.updateOne({_id: req.user._id}, 
+        {$set: updateOps},
+        {runValidators: true}
+        );
+        
+        if(currentUser.nModified === 1) {
+          // console.log(req.user._id)
+          return res.status(200).json({ result: "Updated", msg: "Success" });
         }
+        
     } catch (err) {
       console.log(err)
       return res.status(500).json({ result: err, msg: "Error"});

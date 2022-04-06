@@ -34,6 +34,7 @@ router.get("/all", isAuthorized, usersController.allUser);
 router.get("/single", isAuthorized, usersController.getUser);
 router.post("/singleId", isAuthorized, usersController.getUserById);
 router.post("/createUser", usersController.createUser);
+router.post("/edit", isAuthorized, usersController.edit);
 // router.delete("/user", usersController.getDeleteUser);
 router.post("/pinSetup", usersController.pinSetup);
 

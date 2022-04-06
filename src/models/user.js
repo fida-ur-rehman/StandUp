@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Schema.Types;
 
-const roles = ['user', 'admin'];
+const roles = ['User', 'Admin'];
 
 const userSchema = new mongoose.Schema(
   {
@@ -22,8 +22,8 @@ const userSchema = new mongoose.Schema(
     verified: {type: Boolean, default: false},
     role: {
       type: String,
-      enum: roles,
-      default: 'user',
+      enum: ['User', 'Admin'],
+      default: 'User',
       require: true,
     },
     organisation: {
