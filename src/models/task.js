@@ -15,6 +15,7 @@ const taskSchema = new mongoose.Schema(
     },
     taskId: {type: String, unique:true, require: true},
     userId: {type: ObjectId, ref: "User", require: true},
+    userName: {type: String, require: true, default: "no Name"},
     standupId: {type: ObjectId, ref: "Standup", require: true},
     type: {
         type: String,

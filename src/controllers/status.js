@@ -101,6 +101,7 @@ async standupStatus(req, res) {
           let _status = new statusModel({
             standupId,
             userId: req.user._id,
+            userName: req.user.name,
             taskId,
             status
           });

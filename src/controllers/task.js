@@ -57,7 +57,7 @@ class Task {
           }
         }
       ])
-      
+
           if (_userStandup) {
             let _userStandup1 = _userStandup[0].array
         
@@ -107,6 +107,7 @@ async taskDetails(req, res) {
             desc,
             taskId: shortid.generate(), //calculate unique
             userId: req.user._id,
+            userName: req.user.name,
             standupId,
             taskType
           });
