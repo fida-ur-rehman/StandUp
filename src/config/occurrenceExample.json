@@ -1,0 +1,44 @@
+{ 
+    "occurrence for Daily": {
+        "interval": 2,
+        "freq": 3,
+        "dtstart": "user Local Date in UTC formate"
+    },
+
+    "occurrence for Weekly": {
+        "interval": 2,
+        "freq": 2,
+        "byweekday": [0, 1],
+        "dtstart": "user Local Date in UTC formate"
+    },
+
+    "occurrence for Absolute Monthly": {
+        "interval": 2,
+        "freq": 1,
+        "bymonthday": [23],
+        "dtstart": "user Local Date in UTC formate"
+    },
+
+    "occurrence for Relative Monthly": {
+        "interval": 2,
+        "freq": 1,
+        "byweekday": [{"weekday": 0, "n": 3}],
+        "dtstart": "user Local Date in UTC formate"
+    },
+
+    "occurrence for Absolute Yearly": {
+        "interval": 2,
+        "freq": 0,
+        "bymonth": [2],
+        "bymonthday": [23],
+        "dtstart": "user Local Date in UTC formate"
+    },
+
+    "occurrence for Relative Yearly": {
+        "interval": 2,
+        "freq": 0,
+        "bymonth": [2],
+        "byweekday": [{"weekday": 0, "n": 1}],
+        "dtstart": "user Local Date in UTC formate"
+    }
+}

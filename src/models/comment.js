@@ -11,6 +11,11 @@ const commentSchema = new mongoose.Schema(
       type: String,
       require: true
     },
+    userImage: {
+      type: String,
+      require: true,
+      default: null
+    },
     entityId: {
         type: ObjectId, 
         require: true

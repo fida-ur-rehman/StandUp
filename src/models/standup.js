@@ -27,7 +27,24 @@ const standupSchema = new mongoose.Schema(
     statusTypes: {
         type: Array,
         default: statusTypes
-    }
+    },
+    status: {
+          type: String,
+          enum: ['Not Started', 'Active', "InActive"],
+          default: "Not Started",
+          require: true
+      },
+      occurrence: {},
+      start: {
+          type: Date,
+          require: true
+      },
+      end: {
+          type: Date,
+      },
+      // nextOccurrence: { //Previous Occurred Day
+      //   type: Date,
+      // }
   },
   { timestamps: true }
 );

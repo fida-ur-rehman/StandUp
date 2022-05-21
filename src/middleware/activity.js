@@ -4,9 +4,14 @@ const {taskModel} = require("../models/task")
 const { userModel } = require("../models/user");
 const mongoose = require("mongoose")
 const jwt = require("jsonwebtoken");
+const {ioObject} = require('../../index');
 
-module.exports.activity = function (itemId, title, schema, users, standupId, entityId, collectionName, userName) {
+const {sendMessage} = require("../../socket");
+
+module.exports.activity = async function (itemId, title, schema, users, standupId, entityId, collectionName, userName) {
+    
     try {
+        // console.log(itemId, title, schema, users, userName)
         if(!standupId && !entityId && !collectionName) { //standup Creation 
             let _activity = new activityModel({
                 itemId,
@@ -18,9 +23,11 @@ module.exports.activity = function (itemId, title, schema, users, standupId, ent
               _activity
                 .save()
                 .then(()=> {
-                    console.log("standup notifications Send")
+                    sendMessage(_activity)
+                    console.log("first")
+                    // sendMessage(_activity)
                 })
-        } else if (!users && ! entityId && !collectionName) { // Task Creation
+        } else if (!users && ! entityId && !collectionName && userName) { // Task Creation
             let users1 = []
 
             let usersSetup =  new Promise((resolve, reject) => {
@@ -44,7 +51,36 @@ module.exports.activity = function (itemId, title, schema, users, standupId, ent
                   _activity
                     .save()
                     .then(()=> {
+                        sendMessage(_activity)
                         console.log("Task Notification send")
+                    })
+            })
+        } else if (!users && ! entityId && !collectionName && !userName) { // Task Creation
+            let users1 = []
+
+            let usersSetup =  new Promise((resolve, reject) => {
+                standupModel.findOne({_id: mongoose.Types.ObjectId(standupId)})
+                .then((standup) => {
+                    standup.members.forEach( async (member, index) => {
+                        users1.push(member.user.details._id)
+                        if (index === standup.members.length -1) resolve();
+                    })
+                })
+            })
+
+            usersSetup.then(() => {
+                let _activity = new activityModel({
+                    itemId,
+                    title,
+                    schema,
+                    users: users1,
+                  });
+                  _activity
+                    .save()
+                    .then(()=> {
+                        // console.log("ggg")
+                        // console.log(_activity)
+                        sendMessage(_activity)
                     })
             })
         } else if (!users && !standupId) { //on Comment
@@ -63,6 +99,7 @@ module.exports.activity = function (itemId, title, schema, users, standupId, ent
                           _activity
                             .save()
                             .then(()=> {
+                                sendMessage(_activity)
                                 console.log("Comment notifications Send to Task user")
                             })
                     
@@ -78,8 +115,11 @@ module.exports.activity = function (itemId, title, schema, users, standupId, ent
                           _activity
                             .save()
                             .then(()=> {
+                                sendMessage(_activity)
                                 console.log("Comment notifications Send to Status User")
                             })
+            } else {
+                console.log("Something went wrong fron activity module")
             }
            
         }

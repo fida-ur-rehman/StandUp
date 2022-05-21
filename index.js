@@ -1,5 +1,6 @@
 //IMPORTS
 const express = require('express');
+
 const morgan = require("morgan")
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser")
@@ -10,7 +11,10 @@ const Grid = require("gridfs-stream")
 require("dotenv").config()
 
 //CONSTANTS
+const { socketConnection } = require('./socket');
 const app = express()
+const Server = require('http').Server(app);
+socketConnection(Server);
 const port = process.env.PORT || 3002
 
 //MIDDLEWAREs
@@ -21,7 +25,6 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json())
 
-
 //DATABSE CONNECTION
 mongoose
   .connect(process.env.DATABASE, {
@@ -29,7 +32,8 @@ mongoose
     useUnifiedTopology: true,
     // useCreateIndex: true,
   })
-  .then(() =>console.log("Mongodb Database Connected Successfully"))
+  .then(() =>{console.log("Mongodb Database Connected Successfully")
+})
   .catch((err) => {
     console.log(err)
     console.log("NOT CONNECTED TO DB")
@@ -60,7 +64,34 @@ app.get('/home', (req, res) => {
   res.send('Hello World!')
 })
 
+//Socket Setup
+// const io = require("socket.io")(Server, {
+//   cors: { origin: "*" }
+// })
+
+// let onlineUsers = {}
+// io.on("connection", (socket) => {
+//   console.log("user Connected "+ socket.id)
+
+//   socket.id = socket.handshake.query._id;
+//   onlineUsers[socket.id] = socket;
+
+//   socket.on('Activity', message => {
+//     connectionMap[message.receiver_id].emit('Activity', message);
+//   });
+
+//   socket.on("disconnect", function () {
+//     delete onlineUsers[client];
+//     console.log("Disconnected")
+//   });
+
+// })
+
+
+// const socketIoObject = io;
+// module.exports.ioObject = socketIoObject;
+
 //LISTEN
-app.listen(port, () => {
+Server.listen(port, () => {
   console.log(`Running on port http://localhost:${port}`)
 })

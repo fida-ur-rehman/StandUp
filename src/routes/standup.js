@@ -3,7 +3,7 @@ const router = express.Router();
 const standupController = require("../controllers/standup");
 const { isAuthorized } = require("../middleware/auth");
 
-router.get("/all", isAuthorized, standupController.allStandup);
+router.get("/all", standupController.allStandup);
 router.post("/single", isAuthorized, standupController.getStandup);
 router.get("/userStandup", isAuthorized, standupController.userStandup);
 router.post("/create", isAuthorized, standupController.createStandup);

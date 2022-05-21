@@ -8,6 +8,146 @@ const mongoose = require("mongoose");
 const { promise } = require("bcrypt/promises");
 const {activity} = require("../middleware/activity")
 
+let cron = require('node-cron');
+const { statusSchema } = require("../models/status");
+
+const moment = require('moment');
+
+const { RRule, RRuleSet, rrulestr } = require('rrule')
+
+function checkIfToday(rruleStr){
+  let rule = new RRule(rruleStr);
+  // console.log(rule)
+  let currentDate1 = new Date()
+  let currentDate = new Date(Date.UTC(currentDate1.getUTCFullYear(), currentDate1.getUTCMonth(), currentDate1.getUTCDate(), 00))
+  let nextOccurrence    = rule.after(currentDate, true); // next rule date including today
+  let nextOccurutc      = moment(nextOccurrence).utc(); // convert today into utc
+  let match             = moment(nextOccurutc).isSame(currentDate, 'day'); // check if 'DAY' is same
+  return match;
+}
+
+
+
+// // Create a rule: DAY
+// const dayRule = new RRule({
+//   "interval": 2,
+//   "freq": 3,
+//   "dtstart": new Date('2022-05-21'),
+//   "count": 3
+//   // until: new Date(Date.UTC(2012, 12, 31))
+// })
+
+
+// // console.log(dayRule.all())
+// // console.log(RRule.fromString("RRULE:FREQ=YEARLY;COUNT=5;INTERVAL=2;WKST=MO;BYMONTHDAY=21"))
+// // console.log(checkIfToday(dayRule))
+
+
+
+// // Create a rule: WEEK
+// const weekRule = new RRule({
+//   interval: 2,
+//   freq: 2,
+//   byweekday: [0, 1], //, RRule.WE, RRule.TH, RRule.FR, RRule.SA, RRule.SU
+//   dtstart: new Date(Date.UTC(2022, 04, 21)),
+//   count: 3,
+//   // until: new Date(Date.UTC(2022, 05, 21)),
+// })
+
+// // console.log(weekRule.all())
+
+// // Create a rule: absolute Monthly
+// const absoluteMonthRule = new RRule({
+//   interval: 2,
+//   freq: 1,
+//   bymonthday: [23],
+//   dtstart: new Date(Date.UTC(2022, 04, 21)),
+//   count: 3,
+//   // until: new Date(Date.UTC(2022, 05, 21)),
+// })
+
+// // console.log(absoluteMonthRule.all())
+
+// // Create a rule: Relative Monthy
+// const relativeMonthlyRule = new RRule({
+//   interval: 2,
+//   freq: 1,
+//   byweekday: [{"weekday": 0, "n": 3}, {"weekday": 1, "n": 2}],
+//   dtstart: new Date(Date.UTC(2022, 04, 21)),
+//   count: 3,
+//   // until: new Date(Date.UTC(2022, 05, 21)),
+// })
+
+// // console.log(relativeMonthlyRule.all())
+
+// // Create a rule: Absolute Yearly
+// const absoluteYearlyRule = new RRule({
+//   interval: 2,
+//   freq: 0,
+//   bymonth: [2],
+//   bymonthday: [23],
+//   dtstart: new Date(Date.UTC(2022, 04, 21)),
+//   count: 3
+//   // until: new Date(Date.UTC(2022, 05, 21)),
+// })
+
+// // console.log(absoluteYearlyRule.all())
+
+// // Create a rule: relative Yearly
+// const relativeYearlyRule = new RRule({
+//   "interval": 2,
+//   "freq": 0,
+//   "bymonth": [2],
+//   "byweekday": [{"weekday": 0, "n": 1}],
+//   "dtstart": new Date(Date.UTC(2022, 04, 21)),
+//   "count": 3
+//   // until: new Date(Date.UTC(2022, 05, 21)),
+// })
+
+// console.log(relativeYearlyRule.all())
+
+
+
+// Active and Inactive Job
+cron.schedule('* * * * *', () => {
+
+let currentDate1 = new Date()
+let UTCtime = new Date(Date.UTC(currentDate1.getUTCFullYear(), currentDate1.getUTCMonth(), currentDate1.getUTCDate(), 00))
+
+  standupModel.find()
+    .then((_standups) => {
+      console.log("!")
+      _standups.forEach(async standup => {
+        // console.log(currentDate, standup.start)
+        if(standup.status === "Not Started" && UTCtime >= standup.start){
+          // set Active
+          let a = await standupModel.updateOne({_id: standup._id}, {$set: {status: "Active"}})
+          console.log("Active")
+        } else if(standup.end && standup.status === "Active" && UTCtime >= standup.end){
+          let b = await standupModel.updateOne({_id: standup._id}, {$set: {status: "InActive"}})
+          console.log("InActive")
+        } 
+      });
+    })
+  });
+
+  // Check Occurrrence Send Notification
+cron.schedule('* * * * *', () => {
+      standupModel.find()
+      .then((_standups) => {
+        console.log("@")
+        _standups.forEach(async standup => {
+          let occurrence = checkIfToday(standup.occurrence)
+          
+          if(standup.status === "Active" && occurrence === true) {
+            // send Notification
+            activity(standup._id, "Reminder For status", "Standup", null, standup._id, null, null, null)
+          }
+        });
+      })
+    });
+
+ 
 class Standup {
   async allStandup(req, res) {
     try {
@@ -116,13 +256,23 @@ class Standup {
 
   async createStandup(req, res) {
     try {
-      let { name, teamName, members, includeMe, statusTypes} = req.body
-      if(!name || !teamName || !members || !includeMe) {
+      let { name, teamName, members, includeMe, statusTypes, start, end, occurrence} = req.body
+      if(!name || !teamName || !members || !includeMe || !start || !end || !occurrence) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
           let _members = [] //INVITE
           let _notMember = []
           let _users = []
+
+          let newStartDate = new Date(occurrence.dtstart)
+          let newStartDate1 = new Date(Date.UTC(newStartDate.getUTCFullYear(), newStartDate.getUTCMonth(), newStartDate.getUTCDate()))
+          let newEndDate = new Date(end)
+          let newEndDate1 = new Date(Date.UTC(newEndDate.getUTCFullYear(), newEndDate.getUTCMonth(), newEndDate.getUTCDate()))
+
+          occurrence.dtstart = newStartDate1
+
+          // const newRule = new RRule(occurrence)
+          // console.log(newRule.all())
 
           let memberSetup = new Promise((resolve, reject) => {
 
@@ -160,12 +310,16 @@ class Standup {
                 name,
                 teamName,
                 members: _members,
-                statusTypes
+                statusTypes,
+                occurrence,
+                start: newStartDate1,
+                end: newEndDate1
               });
               _standup
                 .save()
                 .then((created) => {
-                  activity(created._id, "New StandUp", "Standup", _users, null, null, null, req.user.name)
+                  // console.log(_users)
+                  activity(created._id, "New StandUp", "Standup", _users, null, null, null, null)
                     return res.status(200).json({ result: created, msg: "Success"});
                     //Activity
                 })

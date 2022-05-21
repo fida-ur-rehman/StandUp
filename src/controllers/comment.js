@@ -76,6 +76,7 @@ class Comment {
             standupId,
             userId: req.user._id,
             userName: req.user.name,
+            userImage: req.user.img,
             entityId,
             collectionName,
             text
