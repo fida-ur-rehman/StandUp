@@ -132,20 +132,20 @@ let UTCtime = new Date(Date.UTC(currentDate1.getUTCFullYear(), currentDate1.getU
   });
 
   // Check Occurrrence Send Notification
-cron.schedule('* * * * *', () => {
-      standupModel.find()
-      .then((_standups) => {
-        console.log("@")
-        _standups.forEach(async standup => {
-          let occurrence = checkIfToday(standup.occurrence)
+// cron.schedule('* * * * *', () => {
+//       standupModel.find()
+//       .then((_standups) => {
+//         console.log("@")
+//         _standups.forEach(async standup => {
+//           let occurrence = checkIfToday(standup.occurrence)
           
-          if(standup.status === "Active" && occurrence === true) {
-            // send Notification
-            activity(standup._id, "Reminder For status", "Standup", null, standup._id, null, null, null)
-          }
-        });
-      })
-    });
+//           if(standup.status === "Active" && occurrence === true) {
+//             // send Notification
+//             activity(standup._id, "Reminder For status", "Standup", null, standup._id, null, null, null)
+//           }
+//         });
+//       })
+//     });
 
  
 class Standup {
@@ -257,9 +257,11 @@ class Standup {
   async createStandup(req, res) {
     try {
       let { name, teamName, members, includeMe, statusTypes, start, end, occurrence} = req.body
+      console.log(name, teamName, members, includeMe, statusTypes, start, end, occurrence)
       if(!name || !teamName || !members || !includeMe || !start || !end || !occurrence) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
+        
           let _members = [] //INVITE
           let _notMember = []
           let _users = []

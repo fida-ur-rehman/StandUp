@@ -4,7 +4,6 @@ const {taskModel} = require("../models/task")
 const { userModel } = require("../models/user");
 const mongoose = require("mongoose")
 const jwt = require("jsonwebtoken");
-const {ioObject} = require('../../index');
 
 const {sendMessage} = require("../../socket");
 

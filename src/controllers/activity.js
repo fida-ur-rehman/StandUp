@@ -25,7 +25,7 @@ class Activity {
           await activityModel.find({users: {$in: req.user._id}})
           .sort({ _id: -1 })
           .then((_activities) => {
-              console.log(_activities)
+              // console.log(_activities)
               return res.status(200).json({ result: _activities, msg: "Success"});
           })
         } catch (err) {
