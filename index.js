@@ -59,37 +59,12 @@ app.use("/api/task", require("./src/routes/task"));
 app.use("/api/status", require("./src/routes/status"));
 app.use("/api/comment", require("./src/routes/comment"));
 app.use("/api/activity", require("./src/routes/activity"));
+app.use("/api/jira", require("./src/routes/jira"));
 
 app.get('/home', (req, res) => {
   res.send('Hello World!')
 })
 
-//Socket Setup
-// const io = require("socket.io")(Server, {
-//   cors: { origin: "*" }
-// })
-
-// let onlineUsers = {}
-// io.on("connection", (socket) => {
-//   console.log("user Connected "+ socket.id)
-
-//   socket.id = socket.handshake.query._id;
-//   onlineUsers[socket.id] = socket;
-
-//   socket.on('Activity', message => {
-//     connectionMap[message.receiver_id].emit('Activity', message);
-//   });
-
-//   socket.on("disconnect", function () {
-//     delete onlineUsers[client];
-//     console.log("Disconnected")
-//   });
-
-// })
-
-
-// const socketIoObject = io;
-// module.exports.ioObject = socketIoObject;
 
 //LISTEN
 Server.listen(port, () => {

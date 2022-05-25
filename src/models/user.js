@@ -42,6 +42,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null
       // require: true
+    },
+    jira: {
+      email: {type: String},
+      baseUrl: {type: String},
+      accessToken: {type: String}
     }
   },
   { timestamps: true }
