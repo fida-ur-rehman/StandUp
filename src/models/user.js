@@ -46,7 +46,7 @@ const userSchema = new mongoose.Schema(
     jira: {
       email: {type: String},
       baseUrl: {type: String},
-      accessToken: {type: String}
+      accessToken: {type: Object}
     }
   },
   { timestamps: true }

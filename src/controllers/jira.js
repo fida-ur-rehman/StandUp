@@ -32,13 +32,14 @@ class Jira {
   async signIn(req, res) {
     try {
         let {email, baseUrl, accessToken} = req.body;
-        if(!email, baseUrl, accessToken) {
+        if(!email, !baseUrl, !accessToken) {
           return res.status(201).json({ result: "Data Missing", msg: "Error"});
         } else {
             const usernamePasswordBuffer = Buffer.from(email + ':' + accessToken);
             const base64data = usernamePasswordBuffer.toString('base64');
-            let accessTokenE = encrypt(accessToken, process.env.SECRET)
-            let _user = await userModel.updateOne({_id: req.user._id}, {$set: {jira: {email, baseUrl, accessTokenE}}})
+            let accessTokenE = await encrypt(accessToken, process.env.SECRET)
+
+            let _user = await userModel.updateOne({_id: req.user._id}, {$set: {jira: {email, baseUrl, accessToken: accessTokenE}}})
             let checkData = axios.get(`http://${baseUrl}.atlassian.net/rest/api/2/issue/createmeta`, {headers: { 
             'Authorization': `Basic ${base64data}`
           }})
@@ -60,6 +61,7 @@ class Jira {
       try {
           let {issueId} = req.body;
           let {jira} = req.user
+        //   console.log(jira)
           if(!issueId) {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
           } else {
@@ -69,13 +71,13 @@ class Jira {
                 let accessTokenD = decrypt(jira.accessToken, process.env.SECRET)
                 const usernamePasswordBuffer = Buffer.from(jira.email + ':' + accessTokenD);
                 const base64data = usernamePasswordBuffer.toString('base64');
-                let _issue = axios.get(`http://${jira.basUrl}.atlassian.net/rest/api/2/issue/${issueId}`, {headers: { 
+                console.log("inside jira route --------------------------")
+                let _issue = axios.get(`http://${jira.baseUrl}.atlassian.net/rest/api/2/issue/${issueId}`, {headers: { 
                     'Authorization': `Basic ${base64data}`
                 }})
 
-
-
                 _issue.then((response) => {
+                    console.log(response.status)
                     if(response.status === 200) {
                         let newIssue = {
                             title: response.data.fields.summary,
