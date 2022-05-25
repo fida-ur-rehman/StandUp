@@ -56,24 +56,46 @@ class Jira {
     }
   }
 
-//   async searchIssue(req, res) {
-//       try {
-//           let {email, AccessToken} = req.body;
-//           if(!taskId) {
-//             return res.status(201).json({ result: "Data Missing", msg: "Error"});
-//           } else {
-//             let _task = await taskModel.findOne({_id: mongoose.Types.ObjectId(taskId)})
-//             console.log(_task)
-//             if (_task) {
-//                 console.log(_task)
-//             return res.status(200).json({ result: _task, msg: "Success"});
-//             }
-//           }
-//       } catch (err) {
-//             console.log(err)
-//             res.status(500).json({ result: err, msg: "Error"});
-//       }
-//   }
+  async searchIssue(req, res) {
+      try {
+          let {issueId} = req.body;
+          let {jira} = req.user
+          if(!issueId) {
+            return res.status(201).json({ result: "Data Missing", msg: "Error"});
+          } else {
+            if(!jira.baseUrl || !jira.email || !jira.accessToken) {
+                return res.status(201).json({ result: "Please Sign in with Jira", msg: "Error"});
+            } else {
+                let accessTokenD = decrypt(jira.accessToken, process.env.SECRET)
+                const usernamePasswordBuffer = Buffer.from(jira.email + ':' + accessTokenD);
+                const base64data = usernamePasswordBuffer.toString('base64');
+                let _issue = axios.get(`http://${jira.basUrl}.atlassian.net/rest/api/2/issue/${issueId}`, {headers: { 
+                    'Authorization': `Basic ${base64data}`
+                }})
+
+
+
+                _issue.then((response) => {
+                    if(response.status === 200) {
+                        let newIssue = {
+                            title: response.data.fields.summary,
+                            desc: response.data.fields.description,
+                            taskId: response.data.key,
+                            userName: response.data.fields.creator.displayName,
+                            taskType: response.data.fields.labels[0]
+                        }
+                        return res.status(200).json({ result: newIssue, msg: "Success"});
+                    } else {
+                        return res.status(201).json({ result: response.errorMessages[0], msg: "Error"});
+                    }
+                })
+            }
+          }
+      } catch (err) {
+            console.log(err)
+            res.status(500).json({ result: err, msg: "Error"});
+      }
+  }
 
   async importIssue(req, res) {
     try {
