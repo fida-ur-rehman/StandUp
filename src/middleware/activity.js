@@ -142,6 +142,6 @@ module.exports.activity = async function (itemId, title, schema, users, standupI
         }
     } catch (err) {
         console.log(err)
-        return res.status(500).json({ result: err, msg: "Error"});
+        return { result: err, msg: "Error"}
     }
 }

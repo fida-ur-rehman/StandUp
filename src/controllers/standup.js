@@ -40,22 +40,23 @@ cron.schedule('* * * * *', () => {
 
 let currentDate1 = new Date()
 let UTCtime = new Date(Date.UTC(currentDate1.getUTCFullYear(), currentDate1.getUTCMonth(), currentDate1.getUTCDate(), 00))
-
+// console.log(UTCtime, "test")
+  
   standupModel.find()
     .then((_standups) => {
       console.log("!")
       _standups.forEach(async standup => {
-        // console.log(currentDate, standup.start)
+        console.log(standup._id, standup.start, standup.end, UTCtime)
         if(standup.status === "Not Started" && UTCtime >= standup.start){
           // set Active
           let a = await standupModel.updateOne({_id: standup._id}, {$set: {status: "Active"}})
-          console.log("Active")
+          console.log(standup._id, standup.start, standup.end, UTCtime, "Active")
         } else if(standup.end && standup.status === "Active" && UTCtime >= standup.end){
           let b = await standupModel.updateOne({_id: standup._id}, {$set: {status: "InActive"}})
-          console.log("InActive")
-        } else if(standup.status === "Active" || standup.status === "InActive" && UTCtime < standup.start) {
+          console.log(standup._id, standup.start, standup.end, UTCtime, "InActive")
+        } else if(standup.status === "Active" && standup.start > UTCtime || standup.status === "InActive" && standup.start > UTCtime) {
           let b = await standupModel.updateOne({_id: standup._id}, {$set: {status: "Not Started"}})
-          console.log("Not Started")
+          console.log(standup._id, standup.start, standup.end, UTCtime, "Not Started")
         }
       });
     })
@@ -71,7 +72,7 @@ cron.schedule('* * * * *', () => {
           
           if(standup.status === "Active" && occurrence === true) {
             // send Notification
-            activity(standup._id, "Reminder For status", "Standup", null, standup._id, null, null, null)
+            activity(standup._id, "Reminder For status", "Standup", [], standup._id, null, null, null)
           }
         });
       })
@@ -83,7 +84,7 @@ class Standup {
     try {
       let _standups = await standupModel
         .find({})
-        // .populate("members.user.details")
+        .populate("members.user.details")
         .sort({ _id: -1 })
       if (_standups) {
         return res.status(200).json({ result: _standups, msg: "Success"});
