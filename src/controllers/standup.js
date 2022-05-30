@@ -46,7 +46,7 @@ let UTCtime = new Date(Date.UTC(currentDate1.getUTCFullYear(), currentDate1.getU
     .then((_standups) => {
       console.log("!")
       _standups.forEach(async standup => {
-        console.log(standup._id, standup.start, standup.end, UTCtime)
+        // console.log(standup._id, standup.start, standup.end, UTCtime)
         if(standup.status === "Not Started" && UTCtime >= standup.start){
           // set Active
           let a = await standupModel.updateOne({_id: standup._id}, {$set: {status: "Active"}})
