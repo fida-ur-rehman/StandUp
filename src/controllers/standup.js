@@ -1,12 +1,17 @@
 const {standupModel} = require("../models/standup");
 const {userModel} = require("../models/user")
-const shortid = require("shortid")
+// const shortid = require("shortid")
+const {nanoid} = require("nanoid")
+
 const authController = require("../controllers/auth");
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const mongoose = require("mongoose");
 const { promise } = require("bcrypt/promises");
 const {activity} = require("../middleware/activity")
+
+const {checkUserStatus} = require("../middleware/checkUserStatus");
+
 
 let cron = require('node-cron');
 const { statusSchema } = require("../models/status");
@@ -26,87 +31,9 @@ function checkIfToday(rruleStr){
   return match;
 }
 
-
-
-// // Create a rule: DAY
-// const dayRule = new RRule({
-//   "interval": 2,
-//   "freq": 3,
-//   "dtstart": new Date('2022-05-21'),
-//   "count": 3
-//   // until: new Date(Date.UTC(2012, 12, 31))
-// })
-
-
-// // console.log(dayRule.all())
-// // console.log(RRule.fromString("RRULE:FREQ=YEARLY;COUNT=5;INTERVAL=2;WKST=MO;BYMONTHDAY=21"))
-// // console.log(checkIfToday(dayRule))
-
-
-
-// // Create a rule: WEEK
-// const weekRule = new RRule({
-//   interval: 2,
-//   freq: 2,
-//   byweekday: [0, 1], //, RRule.WE, RRule.TH, RRule.FR, RRule.SA, RRule.SU
-//   dtstart: new Date(Date.UTC(2022, 04, 21)),
-//   count: 3,
-//   // until: new Date(Date.UTC(2022, 05, 21)),
-// })
-
-// // console.log(weekRule.all())
-
-// // Create a rule: absolute Monthly
-// const absoluteMonthRule = new RRule({
-//   interval: 2,
-//   freq: 1,
-//   bymonthday: [23],
-//   dtstart: new Date(Date.UTC(2022, 04, 21)),
-//   count: 3,
-//   // until: new Date(Date.UTC(2022, 05, 21)),
-// })
-
-// // console.log(absoluteMonthRule.all())
-
-// // Create a rule: Relative Monthy
-// const relativeMonthlyRule = new RRule({
-//   interval: 2,
-//   freq: 1,
-//   byweekday: [{"weekday": 0, "n": 3}, {"weekday": 1, "n": 2}],
-//   dtstart: new Date(Date.UTC(2022, 04, 21)),
-//   count: 3,
-//   // until: new Date(Date.UTC(2022, 05, 21)),
-// })
-
-// // console.log(relativeMonthlyRule.all())
-
-// // Create a rule: Absolute Yearly
-// const absoluteYearlyRule = new RRule({
-//   interval: 2,
-//   freq: 0,
-//   bymonth: [2],
-//   bymonthday: [23],
-//   dtstart: new Date(Date.UTC(2022, 04, 21)),
-//   count: 3
-//   // until: new Date(Date.UTC(2022, 05, 21)),
-// })
-
-// // console.log(absoluteYearlyRule.all())
-
-// // Create a rule: relative Yearly
-// const relativeYearlyRule = new RRule({
-//   "interval": 2,
-//   "freq": 0,
-//   "bymonth": [2],
-//   "byweekday": [{"weekday": 0, "n": 1}],
-//   "dtstart": new Date(Date.UTC(2022, 04, 21)),
-//   "count": 3
-//   // until: new Date(Date.UTC(2022, 05, 21)),
-// })
-
-// console.log(relativeYearlyRule.all())
-
-
+// function chechAlphanumeric(str) {
+//   return /^[A-Za-z0-9]*$/.test(str);
+// }
 
 // Active and Inactive Job
 cron.schedule('* * * * *', () => {
@@ -126,26 +53,29 @@ let UTCtime = new Date(Date.UTC(currentDate1.getUTCFullYear(), currentDate1.getU
         } else if(standup.end && standup.status === "Active" && UTCtime >= standup.end){
           let b = await standupModel.updateOne({_id: standup._id}, {$set: {status: "InActive"}})
           console.log("InActive")
-        } 
+        } else if(standup.status === "Active" || standup.status === "InActive" && UTCtime < standup.start) {
+          let b = await standupModel.updateOne({_id: standup._id}, {$set: {status: "Not Started"}})
+          console.log("Not Started")
+        }
       });
     })
   });
 
   // Check Occurrrence Send Notification
-// cron.schedule('* * * * *', () => {
-//       standupModel.find()
-//       .then((_standups) => {
-//         console.log("@")
-//         _standups.forEach(async standup => {
-//           let occurrence = checkIfToday(standup.occurrence)
+cron.schedule('* * * * *', () => {
+      standupModel.find()
+      .then((_standups) => {
+        console.log("@")
+        _standups.forEach(async standup => {
+          let occurrence = checkIfToday(standup.occurrence)
           
-//           if(standup.status === "Active" && occurrence === true) {
-//             // send Notification
-//             activity(standup._id, "Reminder For status", "Standup", null, standup._id, null, null, null)
-//           }
-//         });
-//       })
-//     });
+          if(standup.status === "Active" && occurrence === true) {
+            // send Notification
+            activity(standup._id, "Reminder For status", "Standup", null, standup._id, null, null, null)
+          }
+        });
+      })
+    });
 
  
 class Standup {
@@ -153,7 +83,7 @@ class Standup {
     try {
       let _standups = await standupModel
         .find({})
-        .populate("members.user.details")
+        // .populate("members.user.details")
         .sort({ _id: -1 })
       if (_standups) {
         return res.status(200).json({ result: _standups, msg: "Success"});
@@ -174,7 +104,9 @@ class Standup {
             let _standup = await standupModel.findOne({_id: standupId})
             .populate("members.user.details")
             if (_standup) {
-            return res.status(200).json({ result: _standup, msg: "Success"});
+              let _standupCheck = checkUserStatus(_standup)
+              
+            return res.status(200).json({ result: _standupCheck.standup, msg: "Success"});
             }
           }
       } catch (err) {
@@ -185,8 +117,17 @@ class Standup {
 
   async userStandup(req, res) {
     try {
+      let {option} = req.body
+      let sortBy;
+      if(option === "AtoB"){
+        sortBy = {
+          "members.user.details.name": -1
+        }
+      } 
       let _standup = await standupModel.find({"members.user.details": req.user._id})
-                                        .populate("members.user.details")
+                                        .populate({"path": "members.user.details"})
+                                        // .getFilter
+                                        // .sort({"members.user.details.name": 1})
   //         let _standup = await standupModel.aggregate([
   //           { $match: 
   //             {
@@ -216,8 +157,6 @@ class Standup {
   //               members: {
   //                 $push: '$members.user'
   //               }
-                   
-                
   //           }
   //       },
   //       {
@@ -256,15 +195,15 @@ class Standup {
 
   async createStandup(req, res) {
     try {
-      let { name, teamName, members, includeMe, statusTypes, start, end, occurrence} = req.body
-      console.log(name, teamName, members, includeMe, statusTypes, start, end, occurrence)
-      if(!name || !teamName || !members || !includeMe || !start || !end || !occurrence) {
+      let { name, teamName, members, includeMe, statusTypes, start, end, occurrence, key} = req.body
+      if(!name || !teamName || !members || !includeMe || !start || !end || !occurrence || !key) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
-        
           let _members = [] //INVITE
           let _notMember = []
           let _users = []
+
+          key = key.toUpperCase()
 
           let newStartDate = new Date(occurrence.dtstart)
           let newStartDate1 = new Date(Date.UTC(newStartDate.getUTCFullYear(), newStartDate.getUTCMonth(), newStartDate.getUTCDate()))
@@ -314,6 +253,7 @@ class Standup {
                 members: _members,
                 statusTypes,
                 occurrence,
+                key: nanoid() + '.' + key.toUpperCase(),
                 start: newStartDate1,
                 end: newEndDate1
               });
@@ -321,7 +261,7 @@ class Standup {
                 .save()
                 .then((created) => {
                   // console.log(_users)
-                  activity(created._id, "New StandUp", "Standup", _users, null, null, null, null)
+                  activity(created._id, "New StandUp", "Standup", _users, null, null, null, req.user.name)
                     return res.status(200).json({ result: created, msg: "Success"});
                     //Activity
                 })
@@ -356,6 +296,61 @@ class Standup {
       return res.status(500).json({ result: err, msg: "Error"});
     }
   }
+
+  async editWholeStandup(req, res) {
+    try {
+      let {standupId, data} = req.body;
+        if(!standupId) {
+          return res.status(201).json({ result: "Data Missing", msg: "Error"});
+        } else {
+          let _members = [] //INVITE
+          let _notMember = []
+          let _users = []
+
+
+  
+            const updateOps = {};
+            for(const ops of data){
+              if(ops.propName === "occurrence"){
+                let newStartDate = new Date(ops.value.dtstart)
+                let newStartDate1 = new Date(Date.UTC(newStartDate.getUTCFullYear(), newStartDate.getUTCMonth(), newStartDate.getUTCDate()))
+                let newEndDate = new Date(ops.value.until)
+                let newEndDate1 = new Date(Date.UTC(newEndDate.getUTCFullYear(), newEndDate.getUTCMonth(), newEndDate.getUTCDate()))
+
+                ops.value.dtstart = newStartDate1;
+
+                updateOps[ops.propName] = ops.value;
+              } else if (ops.propName === "start"){
+                let newStartDate = new Date(ops.value.start)
+                let newStartDate1 = new Date(Date.UTC(newStartDate.getUTCFullYear(), newStartDate.getUTCMonth(), newStartDate.getUTCDate()))
+                updateOps[ops.propName] = newStartDate1;
+              } else if (ops.propName === "end"){
+                let newEndDate = new Date(ops.value.end)
+                let newEndDate1 = new Date(Date.UTC(newEndDate.getUTCFullYear(), newEndDate.getUTCMonth(), newEndDate.getUTCDate()))
+                updateOps[ops.propName] = newEndDate1;
+              } else if (ops.propName === "members"){
+                let newEndDate = new Date(ops.value.end)
+                let newEndDate1 = new Date(Date.UTC(newEndDate.getUTCFullYear(), newEndDate.getUTCMonth(), newEndDate.getUTCDate()))
+                updateOps[ops.propName] = newEndDate1;
+              }else {
+                updateOps[ops.propName] = ops.value;
+              }
+              
+            }
+            let _standup = await standupModel.updateOne({_id: standupId}, {
+                $set: updateOps
+            });
+            // console.log(updateOps)
+            if(_standup) {
+            return res.status(200).json({ result: _standup, msg: "Success" });
+            }
+          
+        }
+  } catch (err) {
+    console.log(err)
+    return res.status(500).json({ result: err, msg: "Error"});
+  }
+}
 
   async removeMember(req, res) {
     try {
@@ -414,6 +409,45 @@ class Standup {
                   return res.status(200).json({ result: "Not Updated", msg: "Error" });
                 }
               })
+          }
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
+
+  async remindPending(req, res) {
+    try {
+        let {standupId} = req.body;
+          if(!standupId) {
+            return res.status(201).json({ result: "Data Missing", msg: "Error"});
+          } else {
+            let _standup = await standupModel.findOne({_id: standupId})
+            .populate("members.user.details")
+            if (_standup) {
+              let _toBeRemind = []
+              let _standupCheck = checkUserStatus(_standup)
+
+              let memberSetup = new Promise((resolve, reject) => {
+                _standupCheck.standup.lastSubmittedBy.forEach( async (user, index) => {
+                  if(!user.status){
+                    _toBeRemind.push(user.userId)
+                  }
+                  if (index === _standupCheck.standup.lastSubmittedBy.length -1) resolve();
+                });
+              })
+
+              memberSetup.then(() => {
+                if(_toBeRemind.length === 0) {
+                  return res.status(200).json({ result: "No Users To Remind", msg: "Success"});
+                } else {
+                  activity(standupId, "Reminder For status from Admin", "Standup", _toBeRemind, null, null, null, req.user.name)
+                return res.status(200).json({ result: "Reminded", msg: "Success"});
+                }
+              })
+            } else {
+              return res.status(201).json({ result: "Not Found", msg: "Error"});
+            }
           }
     } catch (err) {
       console.log(err)

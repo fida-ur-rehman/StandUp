@@ -11,7 +11,6 @@ class Activity {
             await activityModel.find()
             .sort({ _id: -1 })
             .then((_activity) => {
-                console.log(_activity)
                 return res.status(200).json({ result: _activity, msg: "Success"});
             })
           } catch (err) {

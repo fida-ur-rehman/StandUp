@@ -8,10 +8,11 @@ const jwt = require("jsonwebtoken");
 const {sendMessage} = require("../../socket");
 
 module.exports.activity = async function (itemId, title, schema, users, standupId, entityId, collectionName, userName) {
-    
+    console.log("inside Activity")
     try {
-        // console.log(itemId, title, schema, users, userName)
-        if(!standupId && !entityId && !collectionName) { //standup Creation 
+        console.log(itemId, title, schema, users, standupId, entityId, collectionName, userName)
+        if(!standupId && !entityId && !collectionName && users.length !== 0) { //standup Creation and // not submitted Status
+            console.log("inside Activity 1")
             let _activity = new activityModel({
                 itemId,
                 title,
@@ -26,7 +27,24 @@ module.exports.activity = async function (itemId, title, schema, users, standupI
                     console.log("first")
                     // sendMessage(_activity)
                 })
+        } else if ( !entityId && !collectionName && users.length !== 0) { // Task Creation
+            console.log("inside Activity abcd")
+            let _activity = new activityModel({
+                itemId,
+                title,
+                schema,
+                users,
+                userName
+              });
+              _activity
+                .save()
+                .then(()=> {
+                    sendMessage(_activity)
+                    console.log("seocnd")
+                    // sendMessage(_activity)
+                })
         } else if (!users && ! entityId && !collectionName && userName) { // Task Creation
+            // console.log("inside Activity 2")
             let users1 = []
 
             let usersSetup =  new Promise((resolve, reject) => {
@@ -54,7 +72,7 @@ module.exports.activity = async function (itemId, title, schema, users, standupI
                         console.log("Task Notification send")
                     })
             })
-        } else if (!users && ! entityId && !collectionName && !userName) { // Task Creation
+        } else if (!users && ! entityId && !collectionName && !userName) { // Reminder Cron
             let users1 = []
 
             let usersSetup =  new Promise((resolve, reject) => {

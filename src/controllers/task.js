@@ -2,9 +2,33 @@ const {taskModel} = require("../models/task");
 const mongoose = require("mongoose")
 const {activity} = require("../middleware/activity")
 const shortid = require("shortid");
+const {createTaskId} = require("../middleware/createTaskId")
+const {userModel } = require("../models/user");
 const { standupModel } = require("../models/standup");
 const { commentModel } = require("../models/comment");
 const { statusModel } = require("../models/status");
+const moment = require("moment")
+// function createTaskId(taskSeries, lastTaskId){
+//   let _lastTaskId = lastTaskId + 1
+//   let mainId = taskSeries + '-' +  _lastTaskId 
+//   return mainId;
+// }
+
+var startDate = new Date('2022-05-30T04:17:55.769+0530');
+var endDate = new Date('2022-06-05T04:10:55.769+0530');
+
+console.log(endDate.getTime()-startDate.getTime())
+console.log(new Date(517980000))
+
+// console.log(createTaskId("a", 10))
+// let taskId = createTaskId(11, "StAn")
+// let [ uniqueId, key ] = taskId.split('.');
+// console.log(taskId)
+// console.log(uniqueId)
+// console.log(key)
+// let [ key1, lastTaskId2] = key.split('-')
+// console.log(key1)
+// console.log(lastTaskId2)
 
 class Task {
   async allTask(req, res) {
@@ -42,7 +66,23 @@ class Task {
 
   async userTask(req, res) {
     try {
-      let _userStandup = await standupModel.aggregate([
+      let {option} = req.body
+      let sortBy;
+      if(option === "AtoB"){
+        sortBy = {
+          "title": 1
+        }
+      } else if (option === "Newest"){
+        sortBy = {
+          "createdAt": -1
+        }
+      } else if (option === "Oldest"){
+        sortBy = {
+          "createdAt": 1
+        }
+      }
+
+      let _userStandup = await standupModel.aggregate( [
         { $match: 
           {
             members: {$elemMatch: {"user.details": req.user._id}}
@@ -61,7 +101,7 @@ class Task {
           if (_userStandup) {
             let _userStandup1 = _userStandup[0].array
         
-              let _task = await taskModel.find({standupId: _userStandup1})
+              let _task = await taskModel.find({standupId: _userStandup1}).sort(sortBy)
               if(_task){
                 return res.status(200).json({ result: _task, msg: "Success"});
               }
@@ -93,30 +133,73 @@ async taskDetails(req, res) {
   }
 }
 
-
-
-
   async createTask(req, res) {
     try {
-      let { title, desc, standupId, taskType} = req.body
-      if(!title || !desc || !standupId || !taskType) {
+      let { title, desc, standupId, labels, taskSeries, lastTaskId, assignee, due} = req.body
+      if(!title || !desc || !standupId || !labels || !taskSeries || !lastTaskId) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
-          let _task = new taskModel({
-            title,
-            desc,
-            taskId: shortid.generate(), //calculate unique
-            userId: req.user._id,
-            userName: req.user.name,
-            standupId,
-            taskType
-          });
+        let mainTaskId = createTaskId(taskSeries, lastTaskId)
+        let [ a, displayTaskId] = mainTaskId.split('.')
+        let _assignee = {};
+        let _users = [assignee.details];
+        let _newTask = {};
+        let memberSetup = new Promise((resolve, reject) => {
+          if(!assignee) {
+            _assignee = null
+            resolve();
+          } else {
+            _assignee = {
+              name: assignee.name,
+              details: assignee.details
+            }
+          }
+          resolve();
+        })
+        memberSetup.then(() => {
+          if(!due){
+            _newTask = {
+              title,
+              desc,
+              taskId: mainTaskId, //calculate unique
+              displayTaskId,
+              assignee: _assignee,
+              userId: req.user._id,
+              userName: req.user.name,
+              standupId,
+              labels,
+              start: new Date(),
+            }
+          } else {
+            _newTask = {
+              title,
+              desc,
+              taskId: mainTaskId, //calculate unique
+              displayTaskId,
+              assignee: _assignee,
+              userId: req.user._id,
+              userName: req.user.name,
+              standupId,
+              labels,
+              start: new Date(),
+              due
+            }
+          }
+          let _task = new taskModel(_newTask);
           _task
             .save()
-            .then((created) => {
-                activity(created._id, "New Task", "Task", null, standupId, null, null, req.user.name)
+            .then(async (created) => {
+              let _updateStandup = await standupModel.updateOne({_id: standupId}, {$inc: {lastTaskId: 1}})
+              if(_updateStandup.nModified === 1){
+                if(assignee === null){
+                  activity(created._id, "New Task Created", "Task", null, standupId, null, null, req.user.name)
+                } else {
+                  activity(created._id, "New Task Assigned", "Task", _users, standupId, null, null, req.user.name)
+                }
                 return res.status(200).json({ result: _task, msg: "Success"});
+              }
             })
+        })
       }
     } catch (err) {
       console.log(err)
@@ -138,6 +221,39 @@ async taskDetails(req, res) {
                 $set: updateOps
             });
             console.log(updateOps)
+            if(_task.modifiedCount === 1) {
+            return res.status(200).json({ result: "Updated", msg: "Success" });
+            } else {
+                return res.status(201).json({ result: "Not Found", msg: "Error"});
+            }
+          }
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
+
+  async changeProgress(req, res) {
+    try {
+        let {taskId, progress} = req.body;
+          if(!taskId || !progress) {
+            return res.status(201).json({ result: "Data Missing", msg: "Error"});
+          } else {
+            let set;;
+            if(progress === "Done"){
+              set = {
+                status: progress,
+                end: new Date()
+              }
+            } else {
+              set = {
+                status: progress
+              }
+            }
+            let _task = await taskModel.updateOne({_id: taskId}, {
+                $set: set
+            });
+        
             if(_task.modifiedCount === 1) {
             return res.status(200).json({ result: "Updated", msg: "Success" });
             } else {

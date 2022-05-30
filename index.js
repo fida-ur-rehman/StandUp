@@ -60,10 +60,13 @@ app.use("/api/status", require("./src/routes/status"));
 app.use("/api/comment", require("./src/routes/comment"));
 app.use("/api/activity", require("./src/routes/activity"));
 app.use("/api/jira", require("./src/routes/jira"));
+app.use("/api/export", require("./src/routes/export"));
+
 
 app.get('/home', (req, res) => {
   res.send('Hello World!')
 })
+
 
 
 //LISTEN

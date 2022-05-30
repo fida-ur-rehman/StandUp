@@ -4,6 +4,7 @@ const authController = require("../controllers/auth");
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const mongoose = require("mongoose");
+const { standupModel } = require("../models/standup");
 
 
 class Status {
@@ -98,7 +99,7 @@ async standupStatus(req, res) {
       if(!standupId || !taskId || !status ) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
-        console.log(taskId, standupId,status)
+        // console.log(taskId, standupId,status)
           let _status = new statusModel({
             standupId,
             userId: req.user._id,
@@ -108,8 +109,18 @@ async standupStatus(req, res) {
           });
           _status
             .save()
-            .then((created) => {
-                return res.status(200).json({ result: created, msg: "Success"});
+            .then( async (created) => {
+              let _standup = await standupModel.findById(standupId)
+              if(_standup){
+                // if(_standup.members.some((user) => user.userId === req.user._id)) {
+                  let updatedStandup = await standupModel.updateOne({_id: standupId, "lastSubmittedBy.userId": req.user._id}, {$set: {"lastSubmittedBy.$.date": created.createdAt}})
+                  let updatedStandup1 = await standupModel.updateOne({_id: standupId,  "lastSubmittedBy": {"$not": {"$elemMatch": {"userId": req.user._id}}}}, {$addToSet: {lastSubmittedBy: {userId: req.user._id, date: created.createdAt}}})
+                // } 
+                console.log(updatedStandup.nModified, updatedStandup1.nModified)
+                if(updatedStandup.nModified ===1 || updatedStandup1.nModified ===1) {
+                  return res.status(200).json({ result: created, msg: "Success"});
+                } 
+              }
             })
       }
     } catch (err) {
@@ -132,7 +143,7 @@ async standupStatus(req, res) {
                 $set: updateOps
             });
             console.log(updateOps)
-            if(_status.modifiedCount === 1) {
+            if(_status.nModified === 1) {
             return res.status(200).json({ result: _status, msg: "Success" });
             }
           }

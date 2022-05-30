@@ -35,6 +35,8 @@ const standupSchema = new mongoose.Schema(
           require: true
       },
       occurrence: {},
+      key: {type: String},
+      lastTaskId: {type: Number, default: 0},
       start: {
           type: Date,
           require: true
@@ -42,10 +44,11 @@ const standupSchema = new mongoose.Schema(
       end: {
           type: Date,
       },
-      // nextOccurrence: { //Previous Occurred Day
-      //   type: Date,
-      // }
-  },
+      lastSubmittedBy: [{
+        userId: {type: ObjectId, ref: "User", require: true},
+        date: {type: Date}
+      }]
+    },
   { timestamps: true }
 );
 
