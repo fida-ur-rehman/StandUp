@@ -81,6 +81,31 @@ class Task {
       }
   }
 
+  
+  async standupTask(req, res) {
+    try {
+        let {standupId} = req.body;
+        if(!standupId) {
+          return res.status(201).json({ result: "Data Missing", msg: "Error"});
+        } else {
+          let _task = await taskModel.aggregate([
+            { $match: 
+                {
+                  standupId: new mongoose.Types.ObjectId(standupId),
+                }
+              }
+          ])
+          if (_task) {
+              console.log(_task)
+          return res.status(200).json({ result: _task, msg: "Success"});
+          }
+        }
+    } catch (err) {
+          console.log(err)
+          res.status(500).json({ result: err, msg: "Error"});
+    }
+}
+
   async userTask(req, res) {
     try {
       let {option} = req.body
@@ -153,7 +178,8 @@ async taskDetails(req, res) {
   async createTask(req, res) {
     try {
       let { title, desc, standupId, labels, taskSeries, lastTaskId, assignee, due} = req.body
-      if(!title || !desc || !standupId || !labels || !taskSeries || !lastTaskId) {
+      console.log(title, desc, standupId, labels, taskSeries, assignee, due)
+      if(!title || !desc || !standupId || !labels || !taskSeries || !assignee || !due) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
         let mainTaskId = createTaskId(taskSeries, lastTaskId)

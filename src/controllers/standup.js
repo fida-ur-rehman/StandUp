@@ -34,7 +34,7 @@ function checkIfToday(rruleStr){
 // function chechAlphanumeric(str) {
 //   return /^[A-Za-z0-9]*$/.test(str);
 // }
-
+///commetn in serverir
 // Active and Inactive Job
 // cron.schedule('* * * * *', () => {
 
