@@ -3,6 +3,8 @@ const mongoose = require("mongoose")
 const {activity} = require("../middleware/activity")
 const shortid = require("shortid");
 const {createTaskId} = require("../middleware/createTaskId")
+const {convertSeconds} = require("../middleware/convertSeconds")
+
 const {userModel } = require("../models/user");
 const { standupModel } = require("../models/standup");
 const { commentModel } = require("../models/comment");
@@ -16,30 +18,24 @@ const moment = require("moment")
 
 var startDate = new Date('2022-05-30T04:17:55.769+0530');
 var endDate = new Date('2022-06-30T04:20:55.769+0530');
-var t1 = new Date('2022-05-30T04:17:55.769+0530');
-var t2 = new Date('2022-05-31T04:17:55.769+0530');
-var dif = t2.getTime() - t1.getTime();
 
-console.log(dif/1000)
+// let _seconds = Math.abs((endDate.getTime()-startDate.getTime()) /1000 )
 
-console.log()
-let _seconds = Math.abs((endDate.getTime()-startDate.getTime()) /1000 )
-
-function secondsToDhms(seconds) {
-  seconds = Number(seconds);
-  var d = Math.floor(seconds / (3600*24));
-  var h = Math.floor(seconds % (3600*24) / 3600);
-  var m = Math.floor(seconds % 3600 / 60);
-  var s = Math.floor(seconds % 60);
+// function secondsToDhms(seconds) {
+//   seconds = Number(seconds);
+//   var d = Math.floor(seconds / (3600*24));
+//   var h = Math.floor(seconds % (3600*24) / 3600);
+//   var m = Math.floor(seconds % 3600 / 60);
+//   var s = Math.floor(seconds % 60);
   
-  var dDisplay = d > 0 ? d + (d == 1 ? " day, " : " days, ") : "";
-  var hDisplay = h > 0 ? h + (h == 1 ? " hour, " : " hours, ") : "";
-  var mDisplay = m > 0 ? m + (m == 1 ? " minute, " : " minutes, ") : "";
-  var sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
-  return dDisplay + hDisplay + mDisplay + sDisplay;
-  }
+//   var dDisplay = d > 0 ? d + (d == 1 ? " day, " : " days, ") : "";
+//   var hDisplay = h > 0 ? h + (h == 1 ? " hour, " : " hours, ") : "";
+//   var mDisplay = m > 0 ? m + (m == 1 ? " minute, " : " minutes, ") : "";
+//   var sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
+//   return dDisplay + hDisplay + mDisplay + sDisplay;
+//   }
 
-  console.log(secondsToDhms(_seconds))
+  // console.log(convertSeconds(startDate, endDate), "abcd")
 
 // console.log(createTaskId("a", 10))
 // let taskId = createTaskId(11, "StAn")
@@ -256,16 +252,18 @@ async taskDetails(req, res) {
 
   async changeProgress(req, res) {
     try {
-        let {taskId, progress} = req.body;
+        let {taskId, progress, start} = req.body;
           if(!taskId || !progress) {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
           } else {
-            let set;;
+            let set;
+            let currentDate = new Date();
             if(progress === "Done"){
               set = {
                 status: progress,
-                end: new Date()
-              }
+                end: currentDate,
+                timeTaken: convertSeconds(start, currentDate)             
+               }
             } else {
               set = {
                 status: progress

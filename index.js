@@ -4,6 +4,7 @@ const express = require('express');
 const morgan = require("morgan")
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser")
+const cron = require('node-cron');
 const cors = require("cors")
 const bcrypt = require("bcrypt")
 const crypto = require("crypto")
@@ -67,7 +68,43 @@ app.get('/home', (req, res) => {
   res.send('Hello World!')
 })
 
+const {standupModel} = require("./src/models/standup")
+const {activity} = require("./src/middleware/activity")
 
+const moment = require('moment');
+
+const { RRule, RRuleSet, rrulestr } = require('rrule')
+
+function checkIfToday(rruleStr){
+  let rule = new RRule(rruleStr);
+  // console.log(rule)
+  let currentDate1 = new Date()
+  let currentDate = new Date(Date.UTC(currentDate1.getUTCFullYear(), currentDate1.getUTCMonth(), currentDate1.getUTCDate(), 00))
+  let nextOccurrence    = rule.after(currentDate, true); // next rule date including today
+  let nextOccurutc      = moment(nextOccurrence).utc(); // convert today into utc
+  let match             = moment(nextOccurutc).isSame(currentDate, 'day'); // check if 'DAY' is same
+  return match;
+}
+
+
+// let job = cron.schedule('* * * * * *', () => {
+//     standupModel.find()
+//     .then((_standups) => {
+//       console.log("abcd")
+//       _standups.forEach(async (standup, index) => {
+//         console.log(index)
+//         let occurrence = checkIfToday(standup.occurrence)
+        
+//         if(standup.status === "Active" && occurrence === true) {
+//           // send Notification
+//           console.log(index)
+//           activity(standup._id, "Reminder For status", "Standup", [], standup._id, null, null, null)
+//         }
+//       });
+//     })
+//   });
+
+  // job.start();
 
 //LISTEN
 Server.listen(port, () => {

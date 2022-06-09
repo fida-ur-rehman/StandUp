@@ -36,47 +36,47 @@ function checkIfToday(rruleStr){
 // }
 
 // Active and Inactive Job
-cron.schedule('* * * * *', () => {
+// cron.schedule('* * * * *', () => {
 
-let currentDate1 = new Date()
-let UTCtime = new Date(Date.UTC(currentDate1.getUTCFullYear(), currentDate1.getUTCMonth(), currentDate1.getUTCDate(), 00))
-// console.log(UTCtime, "test")
+// let currentDate1 = new Date()
+// let UTCtime = new Date(Date.UTC(currentDate1.getUTCFullYear(), currentDate1.getUTCMonth(), currentDate1.getUTCDate(), 00))
+// // console.log(UTCtime, "test")
   
-  standupModel.find()
-    .then((_standups) => {
-      console.log("!")
-      _standups.forEach(async standup => {
-        // console.log(standup._id, standup.start, standup.end, UTCtime)
-        if(standup.status === "Not Started" && UTCtime >= standup.start){
-          // set Active
-          let a = await standupModel.updateOne({_id: standup._id}, {$set: {status: "Active"}})
-          console.log(standup._id, standup.start, standup.end, UTCtime, "Active")
-        } else if(standup.end && standup.status === "Active" && UTCtime >= standup.end){
-          let b = await standupModel.updateOne({_id: standup._id}, {$set: {status: "InActive"}})
-          console.log(standup._id, standup.start, standup.end, UTCtime, "InActive")
-        } else if(standup.status === "Active" && standup.start > UTCtime || standup.status === "InActive" && standup.start > UTCtime) {
-          let b = await standupModel.updateOne({_id: standup._id}, {$set: {status: "Not Started"}})
-          console.log(standup._id, standup.start, standup.end, UTCtime, "Not Started")
-        }
-      });
-    })
-  });
+//   standupModel.find()
+//     .then((_standups) => {
+//       console.log("!")
+//       _standups.forEach(async standup => {
+//         // console.log(standup._id, standup.start, standup.end, UTCtime)
+//         if(standup.status === "Not Started" && UTCtime >= standup.start){
+//           // set Active
+//           let a = await standupModel.updateOne({_id: standup._id}, {$set: {status: "Active"}})
+//           console.log(standup._id, standup.start, standup.end, UTCtime, "Active")
+//         } else if(standup.end && standup.status === "Active" && UTCtime >= standup.end){
+//           let b = await standupModel.updateOne({_id: standup._id}, {$set: {status: "InActive"}})
+//           console.log(standup._id, standup.start, standup.end, UTCtime, "InActive")
+//         } else if(standup.status === "Active" && standup.start > UTCtime || standup.status === "InActive" && standup.start > UTCtime) {
+//           let b = await standupModel.updateOne({_id: standup._id}, {$set: {status: "Not Started"}})
+//           console.log(standup._id, standup.start, standup.end, UTCtime, "Not Started")
+//         }
+//       });
+//     })
+//   });
 
-  // Check Occurrrence Send Notification
-cron.schedule('* * * * *', () => {
-      standupModel.find()
-      .then((_standups) => {
-        console.log("@")
-        _standups.forEach(async standup => {
-          let occurrence = checkIfToday(standup.occurrence)
+//   // Check Occurrrence Send Notification
+// cron.schedule('* * * * *', () => {
+//       standupModel.find()
+//       .then((_standups) => {
+//         console.log("@")
+//         _standups.forEach(async standup => {
+//           let occurrence = checkIfToday(standup.occurrence)
           
-          if(standup.status === "Active" && occurrence === true) {
-            // send Notification
-            activity(standup._id, "Reminder For status", "Standup", [], standup._id, null, null, null)
-          }
-        });
-      })
-    });
+//           if(standup.status === "Active" && occurrence === true) {
+//             // send Notification
+//             activity(standup._id, "Reminder For status", "Standup", [], standup._id, null, null, null)
+//           }
+//         });
+//       })
+//     });
 
  
 class Standup {
