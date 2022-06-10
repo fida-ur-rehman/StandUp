@@ -11,5 +11,7 @@ router.post("/create", isAuthorized, statusController.craeteStatus);
 router.post("/edit", isAuthorized, statusController.editStatus);
 router.post("/delete", isAuthorized, statusController.deleteStatus);
 
+router.get("/submissionRate", isAuthorized, statusController.statusSubmissionRate);
+
 
 module.exports = router;

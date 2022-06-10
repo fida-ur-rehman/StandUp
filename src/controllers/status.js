@@ -96,17 +96,28 @@ async standupStatus(req, res) {
   async craeteStatus(req, res) {
     try {
       let { standupId, taskId, status} = req.body
-      if(!standupId || !taskId || !status ) {
+      if(!standupId || !status ) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
         // console.log(taskId, standupId,status)
-          let _status = new statusModel({
+        let _newStatus;
+        if(!taskId){
+          _newStatus = {
+            standupId,
+            userId: req.user._id,
+            userName: req.user.name,
+            status
+          }
+        } else {
+          _newStatus = {
             standupId,
             userId: req.user._id,
             userName: req.user.name,
             taskId,
             status
-          });
+          }
+        }
+          let _status = new statusModel(_newStatus);
           _status
             .save()
             .then( async (created) => {
@@ -171,6 +182,46 @@ async standupStatus(req, res) {
         return res.status(500).json({ result: err, msg: "Error"});
         }
     }
+
+    async statusSubmissionRate(req, res) {
+      try {
+          let {standupId} = req.body;
+          if(!standupId) {
+              return res.status(201).json({ result: "Data Missing", msg: "Error"});
+          } else {
+            let privOccurrence = []
+              let _standup = await standupModel.findOne({_id: standupId})
+              if(_standup){
+                let rule = new RRule(_standup.occurrence);
+                // console.log(rule.all())
+                let a = rule.before(currentDate)
+    
+                
+                for (let i = 10; i > 0; i--) {
+                  if(a) {
+                    privOccurrence.push(a) 
+                    a = rule.before(a)
+                  } else {
+                    break;
+                  }
+                }
+              }
+              let _status = await statusModel.aggregate([
+                {$match: {standupId: new mongoose.Types.ObjectId(standupId)}},
+                {$group: {"_id": "$userId", "count": {"$sum": 1}}}
+              ])
+              console.log(_status)
+              if(_status.deletedCount === 1) {
+                  return res.status(200).json({ result: "Deleted", msg: "Success" });
+              } else {
+                  return res.status(201).json({ result: "Not Deleted", msg: "Error"});
+              }
+          }
+      } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+      }
+  }
 }
 
 const statusController = new Status();

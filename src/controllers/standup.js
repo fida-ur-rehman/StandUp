@@ -11,14 +11,16 @@ const { promise } = require("bcrypt/promises");
 const {activity} = require("../middleware/activity")
 
 const {checkUserStatus} = require("../middleware/checkUserStatus");
+const {checkUserStatusAllStandups} = require("../middleware/checkUserStatusAllStandups");
 
 
 let cron = require('node-cron');
-const { statusSchema } = require("../models/status");
+const { statusSchema, statusModel } = require("../models/status");
 
 const moment = require('moment');
 
-const { RRule, RRuleSet, rrulestr } = require('rrule')
+const { RRule, RRuleSet, rrulestr } = require('rrule');
+const { taskModel } = require("../models/task");
 
 function checkIfToday(rruleStr){
   let rule = new RRule(rruleStr);
@@ -186,7 +188,8 @@ class Standup {
 
   //         ])
           if (_standup) {
-          return res.status(200).json({ result: _standup, msg: "Success"});
+          let _standupCheck = checkUserStatusAllStandups(_standup)
+          return res.status(200).json({ result: _standupCheck.standups, msg: "Success"});
           }
     } catch (err) {
           console.log(err)
@@ -474,6 +477,116 @@ class Standup {
     return res.status(500).json({ result: err, msg: "Error"});
     }
   }
+
+    async statusPerOccurence(req, res) {
+      try {
+        let {standupId} = req.body;
+        if(!standupId) {
+            return res.status(201).json({ result: "Data Missing", msg: "Error"});
+        } else {
+          let _standup = await standupModel.findOne({_id: new mongoose.Types.ObjectId(standupId)})
+          if(_standup) {
+            let types = ["Yearly", "Monthly", "Weekly", "Daily"]
+            let names = []
+            let currentDate1 = new Date()
+            let currentDate = new Date(Date.UTC(currentDate1.getUTCFullYear(), currentDate1.getUTCMonth(), currentDate1.getUTCDate(), 0))
+            // console.log(_standup.occurrence)
+            let rule = new RRule(_standup.occurrence);
+            // console.log(rule.all())
+            let a = rule.before(currentDate)
+
+            let _output = {
+              type: types[_standup.occurrence.freq],
+              Recur: rule.toText(),
+              data: []
+            }
+
+            let privOccurrence = []
+            for (let i = 10; i > 0; i--) {
+              if(a) {
+                privOccurrence.push(a) 
+                a = rule.before(a)
+              } else {
+                break;
+              }
+            }
+            // console.log(privOccurrence)
+            for(let j = (privOccurrence.length)-2 ; j >= 0 ; j--){
+              let _statusCount = await statusModel.find({standupId, "createdAt": {$gte: privOccurrence[j+1], $lte: privOccurrence[j]}}).count()
+              _output.data.push({count: _statusCount, occurrence: privOccurrence[j+1]})
+              // console.log(_statusCount, privOccurrence[j+1])
+            }
+            return res.status(200).json({ result: _output, msg: "Success" });
+          } else {
+            return res.status(201).json({ result: "Not Found", msg: "Error"});
+          }
+          
+        }
+    } catch (err) {
+    console.log(err)
+    return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
+
+  async efficiencyNSubmission(req, res) {
+    try {
+      let {standupId} = req.body;
+      if(!standupId) {
+          return res.status(201).json({ result: "Data Missing", msg: "Error"});
+      } else {
+        let _output = []
+        let _standup = await standupModel.findOne({_id: standupId})
+        if(_standup) {
+          _standup.members.forEach( async(member) => {
+            console.log(member)
+            let _task = await taskModel.aggregate([
+              {$match: {standupId: new mongoose.Types.ObjectId(standupId)}},
+              {$group: {
+                "_id": "$assignee.details", 
+                "count": {"$sum": 1}
+              }}
+
+            ])
+              _output.push({user: member.user.details, tasks: _task})
+              console.log(_task)
+          })
+        }
+        console.log(_output)
+          if(_standup) {
+            // console.log(_standup[0])
+              return res.status(200).json({ result: "Deleted", msg: "Success" });
+          } else {
+              return res.status(201).json({ result: "Not Found", msg: "Error"});
+          }
+
+
+          // let _task = await taskModel.aggregate([
+          //   {$facet: 
+          //     {"totalDone": [            
+          //       {$match: {standupId: new mongoose.Types.ObjectId(standupId), status: "Done"}},  //, doneBy: "Admin"
+          //       {$group: {
+          //         "_id": "$assignee", 
+          //         "count": {"$sum": 1}
+          //       }}
+          //     ],
+          //     "totalInProgress": [            
+          //       {$match: {standupId: new mongoose.Types.ObjectId(standupId), status: "In Progress"}},
+          //       {$group: {
+          //         "_id": "$assignee", 
+          //         "count": {"$sum": 1}
+          //       }}
+          //     ],
+          //   }
+          //   }
+          // ])
+
+          // console.log(_task[0])
+      }
+  } catch (err) {
+  console.log(err)
+  return res.status(500).json({ result: err, msg: "Error"});
+  }
+}
 }
 
 const standupController = new Standup();

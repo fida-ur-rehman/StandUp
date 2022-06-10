@@ -13,6 +13,8 @@ router.post("/removeMember", isAuthorized, standupController.removeMember);
 router.post("/addMembers", isAuthorized, standupController.addMembers);
 router.post("/remind", isAuthorized, standupController.remindPending);
 router.post("/delete", isAuthorized, standupController.delete);
+router.get("/statusPerOccurrence", isAuthorized, standupController.statusPerOccurence);
+router.get("/effTable", isAuthorized, standupController.efficiencyNSubmission);
 
 
 module.exports = router;

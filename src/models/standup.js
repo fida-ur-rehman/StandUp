@@ -21,7 +21,14 @@ const standupSchema = new mongoose.Schema(
         { 
             user: {
                 role: {type: String, enum: userRoles, default: "Participants"},
-                details: {type: ObjectId, ref: "User", require: true},}
+                details: {type: ObjectId, ref: "User", require: true}},
+                performance: {
+                  completed: {type: Number, default: 0},
+                  inProgress: {type: Number, default: 0},
+                  efficiency: {type: Number, default: 0},
+                  submissionRate: {type: Number, default: 0}
+                }
+
         }
     ],
     statusTypes: {

@@ -1,13 +1,13 @@
 const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Schema.Types;
 
-const taskStatus = ['To Do', 'In Progress', 'Done'];
+const taskStatus = ['In Progress', 'Done'];
 
 const taskSchema = new mongoose.Schema(
   {
     title: {type: String, require: true},
     desc: { type: String, require: true},
-    status: {type: String, enum: taskStatus, require: true, default: "To Do"},
+    status: {type: String, enum: taskStatus, require: true, default: "In Progress"},
     taskId: {type: String, unique:true, require: true},
     displayTaskId: {type: String, require: true},
     jiraId: {type: String, default: null},
@@ -19,6 +19,7 @@ const taskSchema = new mongoose.Schema(
     start: {type: Date,require: true},
     end: {type: Date},
     due: {type: Date},
+    doneBy: {type: String, enum: ["User", "Admin", null], default: null},
     timeTaken: {type: String}
   },
   { timestamps: true }

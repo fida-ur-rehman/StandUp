@@ -11,5 +11,6 @@ router.post("/details", isAuthorized, taskController.taskDetails);
 router.post("/create", isAuthorized, taskController.createTask);
 router.post("/edit", isAuthorized, taskController.editTask);
 router.post("/delete", isAuthorized, taskController.deleteTask);
+router.post("/progress", isAuthorized, taskController.changeProgress);
 
 module.exports = router;

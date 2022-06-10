@@ -9,7 +9,8 @@ const {userModel } = require("../models/user");
 const { standupModel } = require("../models/standup");
 const { commentModel } = require("../models/comment");
 const { statusModel } = require("../models/status");
-const moment = require("moment")
+const moment = require("moment");
+const { setPerformance } = require("../middleware/setPerformance");
 // function createTaskId(taskSeries, lastTaskId){
 //   let _lastTaskId = lastTaskId + 1
 //   let mainId = taskSeries + '-' +  _lastTaskId 
@@ -179,19 +180,20 @@ async taskDetails(req, res) {
     try {
       let { title, desc, standupId, labels, taskSeries, lastTaskId, assignee, due} = req.body
       console.log(title, desc, standupId, labels, taskSeries, assignee, due)
-      if(!title || !desc || !standupId || !labels || !taskSeries || !assignee || !due) {
+      if(!title || !desc || !standupId || !labels || !taskSeries) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
         let mainTaskId = createTaskId(taskSeries, lastTaskId)
         let [ a, displayTaskId] = mainTaskId.split('.')
         let _assignee = {};
-        let _users = [assignee.details];
+        let _users;
         let _newTask = {};
         let memberSetup = new Promise((resolve, reject) => {
           if(!assignee) {
             _assignee = null
             resolve();
           } else {
+            _users = [assignee.details];
             _assignee = {
               name: assignee.name,
               details: assignee.details
@@ -232,15 +234,22 @@ async taskDetails(req, res) {
           _task
             .save()
             .then(async (created) => {
-              let _updateStandup = await standupModel.updateOne({_id: standupId}, {$inc: {lastTaskId: 1}})
-              if(_updateStandup.nModified === 1){
                 if(assignee === null){
-                  activity(created._id, "New Task Created", "Task", null, standupId, null, null, req.user.name)
+                  let _updateStandup = await standupModel.updateOne({_id: standupId}, {$inc: {lastTaskId: 1}, })
+                  if(_updateStandup.nModified === 1){
+                    activity(created._id, "New Task Created", "Task", null, standupId, null, null, req.user.name)
+                    return res.status(200).json({ result: _task, msg: "Success"});
+                  }
                 } else {
-                  activity(created._id, "New Task Assigned", "Task", _users, standupId, null, null, req.user.name)
+                  let _updateStandup = await standupModel.updateOne({_id: standupId, "members.user.details": assignee.details}, {$inc: {lastTaskId: 1, "members.$.performance.inProgress": 1}, })
+                  if(_updateStandup.nModified === 1){
+                    // setPerformance()
+                    activity(created._id, "New Task Assigned", "Task", _users, standupId, null, null, req.user.name)
+                    return res.status(200).json({ result: _task, msg: "Success"});
+                  }
                 }
-                return res.status(200).json({ result: _task, msg: "Success"});
-              }
+
+              
             })
         })
       }
@@ -278,31 +287,60 @@ async taskDetails(req, res) {
 
   async changeProgress(req, res) {
     try {
-        let {taskId, progress, start} = req.body;
+        let {taskId, progress} = req.body;
           if(!taskId || !progress) {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
           } else {
             let set;
             let currentDate = new Date();
-            if(progress === "Done"){
-              set = {
-                status: progress,
-                end: currentDate,
-                timeTaken: convertSeconds(start, currentDate)             
-               }
-            } else {
-              set = {
-                status: progress
+            let foundTask = await taskModel.findOne({_id: new mongoose.Types.ObjectId(taskId)})
+            console.log(foundTask)
+            if(foundTask) {
+              if(progress === "Done"){
+                if(foundTask.userId === req.user._id){
+                  set = {
+                    status: progress,
+                    end: currentDate,
+                    timeTaken: convertSeconds(foundTask.start, currentDate),
+                    doneBy: "User"           
+                   }
+                } else {
+                  set = {
+                    status: progress,
+                    end: currentDate,
+                    timeTaken: convertSeconds(foundTask.start, currentDate),
+                    doneBy: "Admin"        
+                   }
+                }
+              } else {
+                set = {
+                  status: progress
+                }
               }
-            }
-            let _task = await taskModel.updateOne({_id: taskId}, {
-                $set: set
-            });
-        
-            if(_task.modifiedCount === 1) {
-            return res.status(200).json({ result: "Updated", msg: "Success" });
+              let _task = await taskModel.updateOne({_id: new mongoose.Types.ObjectId(taskId)}, {
+                  $set: set
+              });
+          
+              if(_task.nModified === 1) {
+                if(progress === "Done" && set.doneBy === "User") {
+                  let _updateStandup = await standupModel.updateOne({_id: foundTask.standupId, "members.user.details": foundTask.assignee.details}, {$inc: {"members.$.performance.completed": 1, "members.$.performance.inProgress": -1}, })
+                  if(_updateStandup.nModified === 1) {
+                    return res.status(200).json({ result: "Updated", msg: "Success" });
+                  }
+                } else if (progress === "Done" && set.doneBy === "Admin") {
+                  let _updateStandup = await standupModel.updateOne({_id: foundTask.standupId, "members.user.details": foundTask.assignee.details}, {$inc: {"members.$.performance.inProgress": -1}, })
+                  if(_updateStandup.nModified === 1) {
+                    return res.status(200).json({ result: "Updated", msg: "Success" });
+                  }
+                } else {
+                   return res.status(200).json({ result: "Updated", msg: "Success" });
+                }
+              } else {
+                  return res.status(201).json({ result: "Not Found", msg: "Error"});
+              }
+
             } else {
-                return res.status(201).json({ result: "Not Found", msg: "Error"});
+              return res.status(201).json({ result: "Not Found", msg: "Error"});
             }
           }
     } catch (err) {
@@ -329,6 +367,25 @@ async taskDetails(req, res) {
         return res.status(500).json({ result: err, msg: "Error"});
         }
     }
+
+    async assignTask(req, res) {
+      try {
+          let {taskId} = req.body;
+          if(!taskId) {
+              return res.status(201).json({ result: "Data Missing", msg: "Error"});
+          } else {
+              let _task = await taskModel.remove({_id: taskId})
+              if(_task.deletedCount === 1) {
+                  return res.status(200).json({ result: "Deleted", msg: "Success" });
+              } else {
+                  return res.status(201).json({ result: "Not Found", msg: "Error"});
+              }
+          }
+      } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+      }
+  }
 }
 
 const taskController = new Task();
