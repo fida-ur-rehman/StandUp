@@ -43,7 +43,7 @@ function checkIfToday(rruleStr){
 // let currentDate1 = new Date()
 // let UTCtime = new Date(Date.UTC(currentDate1.getUTCFullYear(), currentDate1.getUTCMonth(), currentDate1.getUTCDate(), 00))
 // // console.log(UTCtime, "test")
-  //cc added
+  //cc added //cc
 //   standupModel.find()
 //     .then((_standups) => {
 //       console.log("!")
