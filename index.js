@@ -11,6 +11,8 @@ const crypto = require("crypto")
 const Grid = require("gridfs-stream")
 require("dotenv").config()
 
+const jiraConnect = require("./atlassian-connect.json")
+
 //CONSTANTS
 const { socketConnection } = require('./socket');
 const app = express()
@@ -66,6 +68,10 @@ app.use("/api/export", require("./src/routes/export"));
 
 app.get('/home', (req, res) => {
   res.send('Hello World!')
+})
+
+app.get('/atlassian-connect.json', (req, res) => {
+  res.send(jiraConnect)
 })
 
 const {standupModel} = require("./src/models/standup")

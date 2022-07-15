@@ -25,12 +25,14 @@ const standupSchema = new mongoose.Schema(
                 performance: {
                   completed: {type: Number, default: 0},
                   inProgress: {type: Number, default: 0},
+                  totalTimeTaken: {type: Number, default: 0},
                   efficiency: {type: Number, default: 0},
-                  submissionRate: {type: Number, default: 0}
+                  submissionRate: {type: Number, default: 0},
+                  statusSubmitted: {type: Number, default: 0}
                 }
-
         }
     ],
+
     statusTypes: {
         type: Array,
         default: statusTypes
@@ -42,6 +44,7 @@ const standupSchema = new mongoose.Schema(
           require: true
       },
       occurrence: {},
+      occured: {type: Number, default: 0},
       key: {type: String},
       lastTaskId: {type: Number, default: 0},
       start: {

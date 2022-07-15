@@ -99,6 +99,7 @@ async standupStatus(req, res) {
       if(!standupId || !status ) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
+        let submissionRate;
         // console.log(taskId, standupId,status)
         let _newStatus;
         if(!taskId){
@@ -123,9 +124,15 @@ async standupStatus(req, res) {
             .then( async (created) => {
               let _standup = await standupModel.findById(standupId)
               if(_standup){
+                _standup.members.forEach((member) => {
+                  if(member.user.details === req.user._id){
+                    let statusSubmitted = member.user.performance.statusSubmitted + 1
+                    submissionRate = (statusSubmitted / _standup.occured) *100
+                  }
+                })
                 // if(_standup.members.some((user) => user.userId === req.user._id)) {
-                  let updatedStandup = await standupModel.updateOne({_id: standupId, "lastSubmittedBy.userId": req.user._id}, {$set: {"lastSubmittedBy.$.date": created.createdAt}})
-                  let updatedStandup1 = await standupModel.updateOne({_id: standupId,  "lastSubmittedBy": {"$not": {"$elemMatch": {"userId": req.user._id}}}}, {$addToSet: {lastSubmittedBy: {userId: req.user._id, date: created.createdAt}}})
+                  let updatedStandup = await standupModel.updateOne({_id: standupId, "lastSubmittedBy.userId": req.user._id, "members.user.details": req.user,_id}, {$set: {"lastSubmittedBy.$.date": created.createdAt}, $inc: {"members.$.performance.statusSubmitted": 1}, $set: {"members.$.performance.submissionRate": submissionRate}})
+                  let updatedStandup1 = await standupModel.updateOne({_id: standupId,  "lastSubmittedBy": {"$not": {"$elemMatch": {"userId": req.user._id}}}, "members.user.details": req.user,_id}, {$addToSet: {lastSubmittedBy: {userId: req.user._id, date: created.createdAt}}, $inc: {"members.$.performance.statusSubmitted": 1}, $set: {"members.$.performance.submissionRate": submissionRate}})
                 // } 
                 console.log(updatedStandup.nModified, updatedStandup1.nModified)
                 if(updatedStandup.nModified ===1 || updatedStandup1.nModified ===1) {
@@ -166,13 +173,24 @@ async standupStatus(req, res) {
 
     async deleteStatus(req, res) {
         try {
-            let {statusId} = req.body;
+            let {statusId, standupId} = req.body;
             if(!statusId) {
                 return res.status(201).json({ result: "Data Missing", msg: "Error"});
             } else {
+                let _standup = await standupModel.findOne({_id: standupId})
                 let _status = await statusModel.remove({_id: statusId})
+                let submissionRate;
+                _standup.members.forEach((member) => {
+                  if(member.user.details === req.user._id){
+                    let statusSubmitted = member.user.performance.statusSubmitted - 1
+                    submissionRate = (statusSubmitted / _standup.occured) *100
+                  }
+                })
                 if(_status.deletedCount === 1) {
+                  let _updateStandup = await standupModel.updateOne({_id: standupId, "members.user.details": req.user._id}, {$inc: {"members.$.performance.statusSubmitted": -1}, $set: {"members.$.performance.submissionRate": submissionRate}})
+                  if(_updateStandup.nModified === 1) {
                     return res.status(200).json({ result: "Deleted", msg: "Success" });
+                  }
                 } else {
                     return res.status(201).json({ result: "Not Deleted", msg: "Error"});
                 }

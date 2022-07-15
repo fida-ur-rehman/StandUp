@@ -4,6 +4,8 @@ const {activity} = require("../middleware/activity")
 const shortid = require("shortid");
 const {createTaskId} = require("../middleware/createTaskId")
 const {convertSeconds} = require("../middleware/convertSeconds")
+const {convertDays} = require("../middleware/convertDays")
+
 
 const {userModel } = require("../models/user");
 const { standupModel } = require("../models/standup");
@@ -20,7 +22,10 @@ const { setPerformance } = require("../middleware/setPerformance");
 var startDate = new Date('2022-05-30T04:17:55.769+0530');
 var endDate = new Date('2022-06-30T04:20:55.769+0530');
 
-// let _seconds = Math.abs((endDate.getTime()-startDate.getTime()) /1000 )
+
+
+let _seconds = Math.abs((endDate.getTime()-startDate.getTime()) /1000 )
+console.log(convertDays(_seconds), (25/100)*100)
 
 // function secondsToDhms(seconds) {
 //   seconds = Number(seconds);
@@ -293,51 +298,101 @@ async taskDetails(req, res) {
           } else {
             let set;
             let currentDate = new Date();
-            let foundTask = await taskModel.findOne({_id: new mongoose.Types.ObjectId(taskId)})
-            console.log(foundTask)
-            if(foundTask) {
+            let foundTask = await taskModel.aggregate([
+              {$match: {_id: new mongoose.Types.ObjectId(taskId)}},
+              {$lookup: {
+                  from: 'standups',
+                  localField: 'standupId',
+                  foreignField: '_id',
+                  as: 'standupDetails'
+                  }
+               },
+            ])
+            // console.log(foundTask)
+            let efficiency;
+            let totalTimeTaken;
+            console.log( foundTask[0].userId.equals(req.user._id))
+            if(foundTask[0]) {
               if(progress === "Done"){
-                if(foundTask.userId === req.user._id){
+                if(foundTask[0].userId.equals(req.user._id)){
                   set = {
                     status: progress,
                     end: currentDate,
-                    timeTaken: convertSeconds(foundTask.start, currentDate),
+                    timeTaken: convertSeconds(foundTask[0].start, currentDate),
                     doneBy: "User"           
                    }
                 } else {
                   set = {
                     status: progress,
                     end: currentDate,
-                    timeTaken: convertSeconds(foundTask.start, currentDate),
+                    timeTaken: convertSeconds(foundTask[0].start, currentDate),
                     doneBy: "Admin"        
                    }
                 }
               } else {
                 set = {
-                  status: progress
+                  status: progress,
+                  timeTaken: null
                 }
               }
               let _task = await taskModel.updateOne({_id: new mongoose.Types.ObjectId(taskId)}, {
                   $set: set
               });
-          
+
+              let efficiencySetup = new Promise((resolve, reject) => {
+
+                foundTask[0].standupDetails[0].members.forEach((member, index) => {
+                  if(foundTask[0].userId.equals(req.user._id) && progress === "Done"){
+                    // console.log(member)
+                    let totalTaskDone = member.performance.completed + 1
+                    totalTimeTaken = member.performance.totalTimeTaken + convertSeconds(foundTask[0].start, currentDate)
+                    let totalDaysTaken = convertDays(totalTimeTaken)
+                    if(totalDaysTaken === 0) {
+                      totalDaysTaken = 1
+                    }
+                    console.log(totalDaysTaken, totalTaskDone, totalTimeTaken)
+                    efficiency = Math.round(totalTaskDone/totalDaysTaken)
+                  } else  if(foundTask[0].userId.equals(req.user._id) && progress === "In Progress"){
+                    let totalTaskDone = member.performance.completed - 1
+                    totalTimeTaken = member.performance.totalTimeTaken - convertSeconds(foundTask[0].start, currentDate)
+                    if(totalDaysTaken === 0) {
+                      totalDaysTaken = 1
+                    }
+                    let totalDaysTaken = convertDays(totalTimeTaken)
+                    efficiency = Math.round(totalTaskDone/totalDaysTaken)
+                  }
+                  if (index === foundTask[0].standupDetails[0].members.length -1) resolve();
+                })
+            })
+
+            efficiencySetup.then(async() => {
+              console.log(efficiency)
               if(_task.nModified === 1) {
+
                 if(progress === "Done" && set.doneBy === "User") {
-                  let _updateStandup = await standupModel.updateOne({_id: foundTask.standupId, "members.user.details": foundTask.assignee.details}, {$inc: {"members.$.performance.completed": 1, "members.$.performance.inProgress": -1}, })
+                  console.log("a")
+                  let _updateStandup = await standupModel.updateOne({_id: foundTask[0].standupId, "members.user.details": foundTask[0].assignee.details}, {$inc: {"members.$.performance.completed": 1, "members.$.performance.inProgress": -1}, $set: {"members.$.performance.efficiency": efficiency, "members.$.performance.totalTimeTaken": totalTimeTaken}})
                   if(_updateStandup.nModified === 1) {
                     return res.status(200).json({ result: "Updated", msg: "Success" });
                   }
                 } else if (progress === "Done" && set.doneBy === "Admin") {
-                  let _updateStandup = await standupModel.updateOne({_id: foundTask.standupId, "members.user.details": foundTask.assignee.details}, {$inc: {"members.$.performance.inProgress": -1}, })
+                  console.log("b")
+                  let _updateStandup = await standupModel.updateOne({_id: foundTask[0].standupId, "members.user.details": foundTask[0].assignee.details}, {$inc: {"members.$.performance.inProgress": -1}})
                   if(_updateStandup.nModified === 1) {
                     return res.status(200).json({ result: "Updated", msg: "Success" });
                   }
-                } else {
-                   return res.status(200).json({ result: "Updated", msg: "Success" });
+                } else if (progress === "In Progress") {
+                  console.log("c")
+                  let _updateStandup = await standupModel.updateOne({_id: foundTask[0].standupId, "members.user.details": foundTask[0].assignee.details}, {$inc: {"members.$.performance.completed": -1, "members.$.performance.inProgress": 1}, $set: {"members.$.performance.efficiency": efficiency, "members.$.performance.totalTimeTaken": totalTimeTaken}})
+                  if(_updateStandup.nModified === 1) {
+                    return res.status(200).json({ result: "Updated", msg: "Success" });
+                  }
                 }
               } else {
                   return res.status(201).json({ result: "Not Found", msg: "Error"});
               }
+            })
+
 
             } else {
               return res.status(201).json({ result: "Not Found", msg: "Error"});
@@ -370,13 +425,16 @@ async taskDetails(req, res) {
 
     async assignTask(req, res) {
       try {
-          let {taskId} = req.body;
-          if(!taskId) {
+          let {standupId, taskId, assignee} = req.body;
+          if(!standupId || !taskId || !assignee) {
               return res.status(201).json({ result: "Data Missing", msg: "Error"});
           } else {
-              let _task = await taskModel.remove({_id: taskId})
+              let _task = await taskModel.updateOne({_id: taskId}, {$set: assignee})
               if(_task.deletedCount === 1) {
-                  return res.status(200).json({ result: "Deleted", msg: "Success" });
+                let _updateStandup = await standupModel.updateOne({_id: standupId, "members.user.details": assignee.details}, {$inc: {"members.$.performance.inProgress": 1}})
+                if(_updateStandup.nModified === 1) {
+                  return res.status(200).json({ result: "Assigned", msg: "Success" });
+                }
               } else {
                   return res.status(201).json({ result: "Not Found", msg: "Error"});
               }

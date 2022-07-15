@@ -20,7 +20,7 @@ const taskSchema = new mongoose.Schema(
     end: {type: Date},
     due: {type: Date},
     doneBy: {type: String, enum: ["User", "Admin", null], default: null},
-    timeTaken: {type: String}
+    timeTaken: {type: Number, default: null}
   },
   { timestamps: true }
 );

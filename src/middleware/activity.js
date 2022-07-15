@@ -10,7 +10,7 @@ const {sendMessage} = require("../../socket");
 module.exports.activity = async function (itemId, title, schema, users, standupId, entityId, collectionName, userName) {
     console.log("inside Activity")
     try {
-        console.log(itemId, title, schema, users, standupId, entityId, collectionName, userName)
+        // console.log(itemId, title, schema, users, standupId, entityId, collectionName, userName)
         if(!standupId && !entityId && !collectionName && users.length !== 0) { //standup Creation and // not submitted Status
             console.log("inside Activity 1")
             let _activity = new activityModel({

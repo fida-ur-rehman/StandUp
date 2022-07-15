@@ -33,6 +33,7 @@ function checkIfToday(rruleStr){
   return match;
 }
 
+
 // function chechAlphanumeric(str) {
 //   return /^[A-Za-z0-9]*$/.test(str);
 // }
@@ -74,7 +75,10 @@ function checkIfToday(rruleStr){
           
 //           if(standup.status === "Active" && occurrence === true) {
 //             // send Notification
-//             activity(standup._id, "Reminder For status", "Standup", [], standup._id, null, null, null)
+//             let _standup =  await standupModel.updateOne({_id: standup._id}, {$inc: {"occured": 1}})
+//             if(_standup.nModified === 1) {
+//               activity(standup._id, "Reminder For status", "Standup", [], standup._id, null, null, null)
+//             }
 //           }
 //         });
 //       })
@@ -365,7 +369,7 @@ class Standup {
             let _user = await userModel.findOne({email})
             if(_user) {
               let _standup = await standupModel.updateOne({_id: standupId}, {$pull: {members: {"user.details": _user._id}}})
-              if(_standup.modifiedCount === 1) {
+              if(_standup.nModified === 1) {
                   return res.status(200).json({ result: "Updated", msg: "Success" });
               } else {
                 return res.status(201).json({ result: "Not Updated", msg: "Error"});
@@ -407,7 +411,7 @@ class Standup {
 
             memberSetup.then( async() => {
                 let _standup = await standupModel.updateOne({_id: standupId}, {$addToSet: {members: _members}}) //BUG
-                if(_standup.modifiedCount === 1) {
+                if(_standup.nModified === 1) {
                     return res.status(200).json({ result: "Updated", msg: "Success" });
                 } else {
                   return res.status(200).json({ result: "Not Updated", msg: "Error" });
