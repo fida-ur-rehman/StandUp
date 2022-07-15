@@ -13,6 +13,8 @@ require("dotenv").config()
 
 const jiraConnect = require("./atlassian-connect.json")
 
+// const helloworld = require("./public/helloworld.html")
+
 //CONSTANTS
 const { socketConnection } = require('./socket');
 const app = express()
@@ -71,7 +73,12 @@ app.get('/home', (req, res) => {
 })
 
 app.get('/atlassian-connect.json', (req, res) => {
-  res.send(jiraConnect)
+  // res.send(jiraConnect)
+  res.sendFile(path.join(__dirname, '/atlassian-connect.json'))
+})
+
+app.get('/helloworld.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '/helloworld.html'))
 })
 
 const {standupModel} = require("./src/models/standup")
@@ -79,7 +86,8 @@ const {activity} = require("./src/middleware/activity")
 
 const moment = require('moment');
 
-const { RRule, RRuleSet, rrulestr } = require('rrule')
+const { RRule, RRuleSet, rrulestr } = require('rrule');
+const path = require('path');
 
 function checkIfToday(rruleStr){
   let rule = new RRule(rruleStr);
