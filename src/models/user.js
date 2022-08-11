@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { organisationSchema } = require("./organisation");
 const { ObjectId } = mongoose.Schema.Types;
 
 const roles = ['User', 'Admin'];
@@ -30,7 +31,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       require: true
     },
-    designation: {
+    title: {
       type: String,
       require: true
     },
@@ -47,7 +48,8 @@ const userSchema = new mongoose.Schema(
       email: {type: String},
       baseUrl: {type: String},
       accessToken: {type: Object}
-    }
+    },
+    organisations: [{type: ObjectId, ref: "Organisation", require: true}]
   },
   { timestamps: true }
 );

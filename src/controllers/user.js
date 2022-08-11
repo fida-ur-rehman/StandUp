@@ -56,8 +56,8 @@ class User {
 
   async createUser(req, res) {
     try {
-      let { name, email, organisation, designation} = req.body
-      if(!name || !email || !organisation || !designation) {
+      let { name, email, organisation, title} = req.body
+      if(!name || !email || !organisation || !title) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
         let dbUser = await  userModel.findOne({email: email})
@@ -75,7 +75,7 @@ class User {
             name,
             email,
             organisation,
-            designation
+            title
           });
           newUser
             .save()

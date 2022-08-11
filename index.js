@@ -66,6 +66,9 @@ app.use("/api/comment", require("./src/routes/comment"));
 app.use("/api/activity", require("./src/routes/activity"));
 app.use("/api/jira", require("./src/routes/jira"));
 app.use("/api/export", require("./src/routes/export"));
+app.use("/api/plan", require("./src/routes/plan"));
+app.use("/api/organisation", require("./src/routes/organisation"));
+app.use("/api/team", require("./src/routes/team"));
 
 
 app.get('/home', (req, res) => {

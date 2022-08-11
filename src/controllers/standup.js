@@ -203,8 +203,8 @@ class Standup {
 
   async createStandup(req, res) {
     try {
-      let { name, teamName, members, includeMe, statusTypes, start, end, occurrence, key} = req.body
-      if(!name || !teamName || !members || !includeMe || !start || !end || !occurrence || !key) {
+      let { name, organisation, teamName, members, includeMe, statusTypes, start, end, occurrence, key} = req.body
+      if(!name || !organisation || !teamName || !members || !includeMe || !start || !end || !occurrence || !key) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
           let _members = [] //INVITE
@@ -257,6 +257,7 @@ class Standup {
           memberSetup.then(() => {
             let _standup = new standupModel({
                 name,
+                organisation,
                 teamName,
                 members: _members,
                 statusTypes,
