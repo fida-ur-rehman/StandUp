@@ -94,6 +94,37 @@ class Auth {
     }
   };
 
+  async verifyPassword(req, res) {
+    try {
+      let {email, password} = req.body;
+      if(!email || !password){
+        return res.status(201).json({ result: "Data Missing", msg: "Error"});
+      } else {
+        userModel.findOne({email})
+        .then((user) => {
+          if(user.verified === false){
+            return res.status(201).json({ result: "Email Not Verified", msg: "Error"});
+          } else if (user.Password === null) {
+            return res.status(201).json({ result: "Password Setup Remaining", msg: "Error"});
+          } else {
+            let newPassword = password.toString();
+            bcrypt.compare(newPassword, user.password, function(err, result) {
+              if(result == true) {
+                let refreshToken = jwt.sign({ data: email }, JWT_REFRESH_TOKEN, { expiresIn: '1y' });
+                return res.status(200).json({ result: refreshToken, msg: "Success"});
+              } else {
+                return res.status(201).json({ result: "Incorrect", msg: "Error"});
+              }
+          });
+          }
+        })
+      }
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+  };
+
 }
 
 const authController = new Auth();

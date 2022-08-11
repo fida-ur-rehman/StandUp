@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const usersController = require("../controllers/user");
 const { isAuthorized } = require("../middleware/auth");
+const { isAdmin } = require("../middleware/isAdmin");
 
 const path = require('path')
 const multer = require("multer");
@@ -34,9 +35,10 @@ router.get("/all", isAuthorized, usersController.allUser);
 router.get("/single", isAuthorized, usersController.getUser);
 router.post("/singleId", isAuthorized, usersController.getUserById);
 router.post("/createUser", usersController.createUser);
-router.post("/edit", isAuthorized, usersController.edit);
+router.post("/edit", isAuthorized, usersController.edit); /////IMPortant Verifuication ADMIN
 // router.delete("/user", usersController.getDeleteUser);
 router.post("/pinSetup", usersController.pinSetup);
+router.post("/passwordSetup", usersController.passwordSetup);
 
 //uploads
 router.post("/upload", isAuthorized, upload.single("image"), usersController.upload)

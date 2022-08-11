@@ -69,6 +69,7 @@ app.use("/api/export", require("./src/routes/export"));
 app.use("/api/plan", require("./src/routes/plan"));
 app.use("/api/organisation", require("./src/routes/organisation"));
 app.use("/api/team", require("./src/routes/team"));
+app.use("/api/dashboard", require("./src/routes/dashboard"));
 
 
 app.get('/home', (req, res) => {

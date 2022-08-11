@@ -155,6 +155,32 @@ class User {
     }
   }
 
+  async passwordSetup(req, res) {
+    try {
+      let {password, confirmPassword, email} = req.body;
+      if( !password || !confirmPassword || !email) {
+        return res.status(201).json({ result: "Data Missing", msg: "Error"});
+      } else {
+        let newPassword = password.toString();
+        let newConfirmPassword = confirmPassword.toString();
+        if(newPassword === newConfirmPassword) {
+          const _password = await bcrypt.hash(newPassword, 10);
+          userModel.findOneAndUpdate({email}, {$set: {password: _password}})
+          .then((updated) => {
+            // let accessToken = jwt.sign({ data: email }, JWT_AUTH_TOKEN, { expiresIn: '60s' });
+            let refreshToken = jwt.sign({ data: email }, JWT_REFRESH_TOKEN, { expiresIn: '1y' });
+            return res.status(200).json({ result: refreshToken, msg: "Success"});
+          })
+        } else {
+          return res.status(201).json({ result: "Not Match", msg: "Error"});
+        }
+      }
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
+
     async upload(req, res) {
       try {
         await userModel.updateOne({_id: req.user._id}, {$set: {img: req.file.filename}})

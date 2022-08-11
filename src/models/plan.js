@@ -95,6 +95,16 @@ const planSchema = new mongoose.Schema(
             require: true,
             default: "InActive"
         },
+        startDate: {
+            type: String,
+            require: true,
+            default: new Date()
+        },
+        endDate: {
+            type: String,
+            require: true,
+            default: new Date()
+        },
         createdBy: {
             type: ObjectId,
             ref: "User",
