@@ -33,6 +33,9 @@ const storage = new GridFsStorage({
 
 router.get("/all", isAuthorized, usersController.allUser);
 router.get("/single", isAuthorized, usersController.getUser);
+router.get("/adminUsers", isAdmin, usersController.getAdminUsers);
+router.get("/singleByEmail", isAdmin, usersController.getUserByEmail);
+router.get("/organisation", isAdmin, usersController.getOrganisationUser);
 router.post("/singleId", isAuthorized, usersController.getUserById);
 router.post("/createUser", usersController.createUser);
 router.post("/edit", isAuthorized, usersController.edit); /////IMPortant Verifuication ADMIN

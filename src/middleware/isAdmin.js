@@ -1,7 +1,7 @@
 const {userModel} = require("../models/user");
 const jwt = require("jsonwebtoken");
 
-module.exports.isAuthorized  = function(req, res, next) {
+module.exports.isAdmin  = function(req, res, next) {
     try {
         let {token} = req.headers;
         if(!token) {

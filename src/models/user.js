@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema(
       default: 'User',
       require: true,
     },
-    organisation: {
+    company: {
       type: String,
       require: true
     },

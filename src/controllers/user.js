@@ -4,7 +4,6 @@ const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const mongoose = require("mongoose");
 
-
 let JWT_AUTH_TOKEN = process.env.JWT_AUTH_TOKEN;
 let JWT_REFRESH_TOKEN = process.env.JWT_REFRESH_TOKEN;
 
@@ -36,6 +35,20 @@ class User {
       }
   }
 
+  async getAdminUsers(req, res) {
+    try {
+      let User = await userModel.aggregate([
+        {$match: {"role": "Admin"}}
+      ])
+    if (User) {
+      return res.status(200).json({ result: User, msg: "Success"});
+      }
+    } catch (err) {
+          console.log(err)
+          res.status(500).json({ result: err, msg: "Error"});
+    }
+}
+
   async getUserById(req, res) {
     try {
       let { userId } = req.body;
@@ -54,10 +67,47 @@ class User {
     }
 }
 
+async getUserByEmail(req, res) {
+  try {
+    let { email } = req.body;
+    if(!email) {
+      return res.status(201).json({ result: "Data Missing", msg: "Error"});
+    } else {
+      let User = await userModel
+      .findOne({email})
+      if (User) {
+        return res.status(200).json({ result: User, msg: "Success"});
+      }
+    }
+  } catch (err) {
+        console.log(err)
+        res.status(500).json({ result: err, msg: "Error"});
+  }
+}
+
+async getOrganisationUser(req, res) {
+  try {
+    let { orgId } = req.body;
+    if(!orgId) {
+      return res.status(201).json({ result: "Data Missing", msg: "Error"});
+    } else {
+      let User = await userModel.aggregate([
+        {$match: {organisations: {$in: [new mongoose.Types.ObjectId(orgId)]}}}
+      ])
+      if (User) {
+        return res.status(200).json({ result: User, msg: "Success"});
+      }
+    }
+  } catch (err) {
+        console.log(err)
+        res.status(500).json({ result: err, msg: "Error"});
+  }
+}
+
   async createUser(req, res) {
     try {
-      let { name, email, organisation, title} = req.body
-      if(!name || !email || !organisation || !title) {
+      let { name, email, company, title} = req.body
+      if(!name || !email || !company || !title) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
         let dbUser = await  userModel.findOne({email: email})
@@ -74,7 +124,7 @@ class User {
           let newUser = new userModel({
             name,
             email,
-            organisation,
+            company,
             title
           });
           newUser
