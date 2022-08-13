@@ -30,7 +30,15 @@ const organisationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
       require: true
+    },
+    createdBy:  {type: ObjectId, ref: "User", require: true},
+    creation: {
+      type: String,
+      enum: ["Admin", "Self"],
+      require: true,
+      default: "Self"
     }
+
   },
   { timestamps: true }
 );

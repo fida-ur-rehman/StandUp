@@ -40,8 +40,8 @@ class Plan {
 
   async createPlan(req, res) {
     try {
-      let { name, forSpecific, organisation, standupCreators, standups, standupPerUser, taskPerStandup, userPerStandup, insight, jira, selfServer, exportImport, price, validityInDays} = req.body
-      if(!name || !organisation || !standupCreators || !standups || !standupPerUser || !taskPerStandup || !userPerStandup || !price || !validityInDays ) {
+      let { name, forSpecific, organisation, standupCreators, standups, totalMembers, standupPerUser, taskPerStandup, userPerStandup, insight, jira, selfServer, exportImport, price, validityInDays} = req.body
+      if(!name || !organisation || !standupCreators || !standups || !totalMembers || !standupPerUser || !taskPerStandup || !userPerStandup || !price || !validityInDays ) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
 
@@ -53,6 +53,7 @@ class Plan {
             organisation,
             standupCreators,
             standups,
+            totalMembers,
             standupPerUser,
             taskPerStandup,
             userPerStandup,
@@ -62,7 +63,8 @@ class Plan {
             exportImport,
             price,
             validityInDays,
-            singleDayPrice
+            singleDayPrice,
+            createdBy: req.user._id
           });
           _plan
             .save()

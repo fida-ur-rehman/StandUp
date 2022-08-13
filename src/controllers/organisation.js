@@ -52,7 +52,9 @@ class Organisation {
             let _organisation = new organisationModel({
               name,
               owner,
-              plan
+              plan,
+              createdBy: req.user._id,
+              creation: "Admin"
             });
             _organisation
               .save()
@@ -73,7 +75,8 @@ class Organisation {
             let _organisation = new organisationModel({
               name,
               owner: req.user.email,
-              plan
+              plan,
+              createdBy: req.user._id
             });
             _organisation
               .save()

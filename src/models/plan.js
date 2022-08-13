@@ -34,37 +34,91 @@ const planSchema = new mongoose.Schema(
             type: Number,
             require: true
         },
+        CstandupCreators: {
+            type: Number,
+            require: true,
+            default: 0
+        },
+        totalMembers: {
+            type: Number,
+            require: true
+        },
+        CTotalMembers: {
+            type: Number,
+            require: true,
+            default: 0,
+        },
         standups: {
             type: Number,
             require: true
+        },
+        CStandups: {
+            type: Number,
+            require: true,
+            default: 0
         },
         standupPerUser: {
             type: Number,
             require: true
         },
+        CStandupPerUser: {
+            type: Number,
+            require: true,
+            default: 0
+        },
         taskPerStandup: {
             type: Number,
             require: true
+        },
+        CTaskPerStandup: {
+            type: Number,
+            require: true,
+            default: 0
         },
         usersPerStandup: {
             type: Number,
             require: true
         },
+        CUsersPerStandup: {
+            type: Number,
+            require: true,
+            default: 0
+        },
         insight: {
             type: Boolean,
             require: true
         },
+        // CInsight: {
+        //     type: Boolean,
+        //     require: true,
+        //     default: false
+        // },
         jira: {
             type: Boolean,
             require: true
+        },
+        CJira: {
+            type: Boolean,
+            require: true,
+            default: false
         },
         selfServer: {
             type: Boolean,
             require: true
         },
-        exportImport: {
+        CSelfServer: {
             type: Boolean,
+            require: true,
+            default: 0
+        },
+        export: {
+            type: Number,
             require: true
+        },
+        CExport: {
+            type: Number,
+            require: true,
+            default: 0
         },
         visibility: {
             type: Boolean,
