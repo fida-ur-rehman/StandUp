@@ -27,6 +27,12 @@ const userSchema = new mongoose.Schema(
       default: 'User',
       require: true,
     },
+    roleType: {
+      type: String,
+      enum: ["NORMAL", "SUPER"],
+      default: "NORMAL",
+      require: true
+    },
     company: {
       type: String,
       require: true
@@ -54,7 +60,8 @@ const userSchema = new mongoose.Schema(
       baseUrl: {type: String},
       accessToken: {type: Object}
     },
-    organisations: [{type: ObjectId, ref: "Organisation", require: true}]
+    organisations: [{type: ObjectId, ref: "Organisation", require: true}],
+    createdBy: {type: ObjectId, ref: "User", require: true, default: "Self"}
   },
   { timestamps: true }
 );

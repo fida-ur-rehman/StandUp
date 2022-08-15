@@ -141,6 +141,78 @@ async getOrganisationUser(req, res) {
     }
   }
 
+  async createAdmin(req, res) {
+    try {
+      let { name, email, company, title, password, confirmPassword} = req.body
+      if(!name || !email || !company || !title || !password || !confirmPassword) {
+        return res.status(201).json({ result: "Data Missing", msg: "Error"});
+      } else {
+        let dbUser = await  userModel.findOne({email: email})
+        if(dbUser) {
+            return res.status(201).json({ result: "Already Exist", msg: "Error"});
+        } else {
+          if(req.user.roleType === "NORMAL") {
+            return res.status(201).json({ result: "Permission Required", msg: "Error"});
+          } else if(req.user.roleType === "SUPER") {
+            let newPassword = password.toString();
+            let newConfirmPassword = confirmPassword.toString();
+            if(newPassword === newConfirmPassword) {
+              const _password = await bcrypt.hash(newPassword, 10);
+              let newUser = new userModel({
+                name,
+                email,
+                company,
+                title,
+                password: _password,
+                createdBy: req.user._id
+              });
+            newUser
+              .save()
+              .then((created) => {
+                return res.status(200).json({ result: "Created", msg: "Success" });
+              })
+          } else {
+          return res.status(201).json({ result: "Not Match", msg: "Error"});
+        }
+          } else {
+            return res.status(201).json({ result: "Permission Required", msg: "Error"});
+          }
+      }
+    }
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
+
+  async editAdmin(req, res) {
+    try {
+      let { name, company, title, adminId} = req.body
+      if(!name || !company || !title || !adminId) {
+        return res.status(201).json({ result: "Data Missing", msg: "Error"});
+      } else {
+        if(req.user.roleType === "NORMAL") {
+          return res.status(201).json({ result: "Permission Required", msg: "Error"});
+        } else if (req.user.roleType === "SUPER") {
+            let currentUser = await userModel.updateOne({_id: mongoose.Types.ObjectId(adminId)}, 
+                    {$set: {name, company, title}},
+                    {runValidators: true}
+                );
+            if(currentUser.nModified === 1) {
+              return res.status(200).json({ result: "Updated", msg: "Success" });
+            } else {
+              return res.status(201).json({ result: "Not Found", msg: "Error" });
+            } 
+        } else {
+          return res.status(201).json({ result: "Permission Required", msg: "Error"});
+        }
+      } 
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
+
   async edit(req, res) {
     try {
       const updateOps = {};
@@ -163,21 +235,32 @@ async getOrganisationUser(req, res) {
     }
   }
 
-//   async getDeleteUser(req, res) {
-//     let { oId, status } = req.body;
-//     if (!oId || !status) {
-//       return res.json({ message: "All filled must be required" });
-//     } else {
-//       let currentUser = userModel.findByIdAndUpdate(oId, {
-//         status: status,
-//         updatedAt: Date.now(),
-//       });
-//       currentUser.exec((err, result) => {
-//         if (err) console.log(err);
-//         return res.json({ success: "User updated successfully" });
-//       });
-//     }
-//   }
+  async deletedAdmin(req, res) {
+    try {
+      let { adminId } = req.body
+      if( !adminId) {
+        return res.status(201).json({ result: "Data Missing", msg: "Error"});
+      } else {
+        if(req.user.roleType === "NORMAL") {
+          return res.status(201).json({ result: "Permission Required", msg: "Error"});
+        } else if (req.user.roleType === "SUPER") {
+          let currentUser = await userModel.remove({_id: mongoose.Types.ObjectId(adminId)});          
+          if(currentUser.deletedCount === 1) {
+            return res.status(200).json({ result: "Deleted", msg: "Success" });
+          } else {
+            return res.status(201).json({ result: "Not Found", msg: "Error" });
+          }
+        } else {
+          return res.status(201).json({ result: "Permission Required", msg: "Error"});
+        }
+      } 
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
+
+
 
   async pinSetup(req, res) {
     try {
@@ -223,6 +306,38 @@ async getOrganisationUser(req, res) {
           })
         } else {
           return res.status(201).json({ result: "Not Match", msg: "Error"});
+        }
+      }
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
+
+  async adminResetPassword(req, res) {
+    try {
+      let {password, confirmPassword, adminId} = req.body;
+      if( !password || !confirmPassword || !adminId) {
+        return res.status(201).json({ result: "Data Missing", msg: "Error"});
+      } else {
+        if(req.user.roleType === "NORMAL") {
+          return res.status(201).json({ result: "Permission Required", msg: "error"});
+        } else if (req.user.roleType === "SUPER") {
+          let newpassword = password.toString();
+        let newConfirmPassword = confirmPassword.toString();
+        if(newpassword === newConfirmPassword) {
+          const _password = await bcrypt.hash(newpassword, 10);
+          let updatedUser = await userModel.updateOne({_id: adminId}, {$set: {password: _password}})
+          if(updatedUser.nModified === 1){
+            return res.status(200).json({ result: "Updated", msg: "Success" });
+          } else {
+            return res.status(201).json({ result: "Not Updated", msg: "Success" });
+          }
+        } else {
+          return res.status(201).json({ result: "Not Match", msg: "Error"});
+        }
+        } else {
+          return res.status(201).json({ result: "Permission Required", msg: "Error"});
         }
       }
     } catch (err) {

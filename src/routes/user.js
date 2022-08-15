@@ -49,4 +49,13 @@ router.get("/uploads", isAuthorized, usersController.getAllUploads)
 router.get("/uploads/:filename", isAuthorized, usersController.getSingleUpload)
 router.get("/image/:filename", usersController.getSingleImg)
 
+router.post("/createAdmin", isAdmin, usersController.createAdmin);
+router.post("/editAdmin", isAdmin, usersController.editAdmin);
+router.post("/adminResetPassword", isAdmin, usersController.adminResetPassword);
+router.post("/deleteAdmin", isAdmin, usersController.deletedAdmin);
+
+
+
+
+
 module.exports = router;
