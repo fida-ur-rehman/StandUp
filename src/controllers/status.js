@@ -131,7 +131,7 @@ async standupStatus(req, res) {
                   }
                 })
                 // if(_standup.members.some((user) => user.userId === req.user._id)) {
-                  let updatedStandup = await standupModel.updateOne({_id: standupId, "lastSubmittedBy.userId": req.user._id, "members.user.details": req.user,_id}, {$set: {"lastSubmittedBy.$.date": created.createdAt}, $inc: {"members.$.performance.statusSubmitted": 1}, $set: {"members.$.performance.submissionRate": submissionRate}})
+                  let updatedStandup = await standupModel.updateOne({_id: standupId, "lastSubmittedBy.userId": req.user._id, "members.user.details": req.user._id}, {$set: {"lastSubmittedBy.$.date": created.createdAt}, $inc: {"members.$.performance.statusSubmitted": 1}, $set: {"members.$.performance.submissionRate": submissionRate}})
                   let updatedStandup1 = await standupModel.updateOne({_id: standupId,  "lastSubmittedBy": {"$not": {"$elemMatch": {"userId": req.user._id}}}, "members.user.details": req.user,_id}, {$addToSet: {lastSubmittedBy: {userId: req.user._id, date: created.createdAt}}, $inc: {"members.$.performance.statusSubmitted": 1}, $set: {"members.$.performance.submissionRate": submissionRate}})
                 // } 
                 console.log(updatedStandup.nModified, updatedStandup1.nModified)

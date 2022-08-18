@@ -203,10 +203,12 @@ class Standup {
 
   async createStandup(req, res) {
     try {
-      let { name, organisation, teamName, members, includeMe, statusTypes, start, end, occurrence, key} = req.body
-      if(!name || !organisation || !teamName || !members || !includeMe || !start || !end || !occurrence || !key) {
+      let { name, organisationId, teamName, members, includeMe, statusTypes, start, end, occurrence, key} = req.body
+      if(!name || !organisationId || !teamName || !members || !includeMe || !start || !end || !occurrence || !key) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
+        let userOrg = req.user.organisations.find( org => org['organisationId'] == organisationId)
+        if(userOrg.permissions.includes("STANDUP-CREATOR")) {
           let _members = [] //INVITE
           let _notMember = []
           let _users = []
@@ -257,7 +259,7 @@ class Standup {
           memberSetup.then(() => {
             let _standup = new standupModel({
                 name,
-                organisation,
+                organisationId,
                 teamName,
                 members: _members,
                 statusTypes,
@@ -275,6 +277,9 @@ class Standup {
                     //Activity
                 })
           })
+        } else {
+          return res.status(201).json({ result: "Permission Required", msg: "Error"});
+        }
       }
     } catch (err) {
       console.log(err)

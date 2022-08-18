@@ -12,6 +12,10 @@ const organisationSchema = new mongoose.Schema(
     owner: {
       type: String, ref: "User", require: true
     },
+    joiningId: {
+      type: String,
+      require: true
+    },
     admins: [{type: String, ref: "User", require: true}],
     status: {
         type: String,

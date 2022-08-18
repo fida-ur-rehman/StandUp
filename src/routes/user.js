@@ -54,6 +54,8 @@ router.post("/editAdmin", isAdmin, usersController.editAdmin);
 router.post("/adminResetPassword", isAdmin, usersController.adminResetPassword);
 router.post("/deleteAdmin", isAdmin, usersController.deletedAdmin);
 
+router.get("/organisationDetails", isAuthorized, usersController.getUserOrganisationDetails);
+
 
 
 

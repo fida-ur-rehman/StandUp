@@ -92,12 +92,62 @@ async getOrganisationUser(req, res) {
       return res.status(201).json({ result: "Data Missing", msg: "Error"});
     } else {
       let User = await userModel.aggregate([
-        {$match: {organisations: {$in: [new mongoose.Types.ObjectId(orgId)]}}}
+        {$match: {"organisations.organisationId": mongoose.Types.ObjectId(orgId)}}
       ])
       if (User) {
         return res.status(200).json({ result: User, msg: "Success"});
       }
     }
+  } catch (err) {
+        console.log(err)
+        res.status(500).json({ result: err, msg: "Error"});
+  }
+}
+
+async getUserOrganisationDetails(req, res) {
+  try {
+    console.log(req.user)
+      let User = await userModel.aggregate([
+        {$match: {_id: req.user._id}},
+        {$lookup: {
+          from: 'organisations',
+          localField: 'organisations.organisationId',
+          foreignField: '_id',
+          as: 'organisations'
+          }
+        },
+        {$unset: ["organisations.payment", "organisations.plan", "organisations.teams", "organisations.creation"]}
+      ])
+      if (User) {
+        return res.status(200).json({ result: User, msg: "Success"});
+      }
+  } catch (err) {
+        console.log(err)
+        res.status(500).json({ result: err, msg: "Error"});
+  }
+}
+
+async joinOrganisation(req, res) {
+  try {
+    let {organisation} = req.body
+      if(!name || !email || !company || !title) {
+        return res.status(201).json({ result: "Data Missing", msg: "Error"});
+      } else {
+        let User = await userModel.aggregate([
+          {$match: {_id: req.user._id}},
+          {$lookup: {
+            from: 'organisation',
+            localField: 'organisations',
+            foreignField: '_id',
+            as: 'organisations'
+            }
+          },
+          {$unset: ["payment", "plan", "teams", "creation"]}
+        ])
+        if (User) {
+          return res.status(200).json({ result: User, msg: "Success"});
+        }
+      }
   } catch (err) {
         console.log(err)
         res.status(500).json({ result: err, msg: "Error"});
@@ -300,9 +350,13 @@ async getOrganisationUser(req, res) {
           const _password = await bcrypt.hash(newPassword, 10);
           userModel.findOneAndUpdate({email}, {$set: {password: _password}})
           .then((updated) => {
-            // let accessToken = jwt.sign({ data: email }, JWT_AUTH_TOKEN, { expiresIn: '60s' });
-            let refreshToken = jwt.sign({ data: email }, JWT_REFRESH_TOKEN, { expiresIn: '1y' });
-            return res.status(200).json({ result: refreshToken, msg: "Success"});
+            if(updated) {
+              // let accessToken = jwt.sign({ data: email }, JWT_AUTH_TOKEN, { expiresIn: '60s' });
+              let refreshToken = jwt.sign({ data: email }, JWT_REFRESH_TOKEN, { expiresIn: '1y' });
+              return res.status(200).json({ result: refreshToken, msg: "Success"});
+            } else {
+              return res.status(201).json({ result: "Not Found", msg: "Error"});
+            }
           })
         } else {
           return res.status(201).json({ result: "Not Match", msg: "Error"});

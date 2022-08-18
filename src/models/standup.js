@@ -13,7 +13,7 @@ const standupSchema = new mongoose.Schema(
       type: String,
       require: true
     },
-    organisation: {type: ObjectId, ref: "Organisation", require: true},
+    organisationId: {type: ObjectId, ref: "Organisation", require: true},
     teamName: {
         type: String,
         require: true

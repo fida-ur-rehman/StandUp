@@ -60,8 +60,16 @@ const userSchema = new mongoose.Schema(
       baseUrl: {type: String},
       accessToken: {type: Object}
     },
-    organisations: [{type: ObjectId, ref: "Organisation", require: true}],
-    createdBy: {type: ObjectId, ref: "User", require: true, default: "Self"}
+    organisations: [{
+      organisationId: {type: ObjectId, ref: "Organisation", require: true},
+      role: {
+        type: String,
+        enum: ["MEMBER", "ADMIN", "OWNER"],
+        default: "MEMBER"
+      },
+      permissions: [{type: String, enum: ["STANDUP-CREATOR"]}]
+    }],
+    createdBy: {type: ObjectId, ref: "User", require: true, default: null}
   },
   { timestamps: true }
 );
