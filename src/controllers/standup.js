@@ -208,7 +208,7 @@ class Standup {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
         let userOrg = req.user.organisations.find( org => org['organisationId'] == organisationId)
-        if(userOrg.permissions.includes("STANDUP-CREATOR")) {
+        if(userOrg.role === "ADMIN" || userOrg.permissions.includes("STANDUP-CREATOR")) {
           let _members = [] //INVITE
           let _notMember = []
           let _users = []
