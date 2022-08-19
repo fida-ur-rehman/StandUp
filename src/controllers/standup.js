@@ -208,77 +208,81 @@ class Standup {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
         let userOrg = req.user.organisations.find( org => org['organisationId'] == organisationId)
-        if(userOrg.role === "ADMIN" || userOrg.permissions.includes("STANDUP-CREATOR")) {
-          let _members = [] //INVITE
-          let _notMember = []
-          let _users = []
-
-          key = key.toUpperCase()
-
-          let newStartDate = new Date(occurrence.dtstart)
-          let newStartDate1 = new Date(Date.UTC(newStartDate.getUTCFullYear(), newStartDate.getUTCMonth(), newStartDate.getUTCDate()))
-          let newEndDate = new Date(end)
-          let newEndDate1 = new Date(Date.UTC(newEndDate.getUTCFullYear(), newEndDate.getUTCMonth(), newEndDate.getUTCDate()))
-
-          occurrence.dtstart = newStartDate1
-
-          // const newRule = new RRule(occurrence)
-          // console.log(newRule.all())
-
-          let memberSetup = new Promise((resolve, reject) => {
-
-            if(!statusTypes || statusTypes === null) {
-                statusTypes = ['Worked On', 'Working On', 'Blocker'];
-            }
-
-            if(includeMe === true) {
-                let userDoc = {
-                    user: {
-                      details: req.user._id,
-                      role: "Admin"
-                    },
-                }
-                _members.push(userDoc)
-            }
-
-            members.forEach(async (member, index) => {
-                let user = await userModel.findOne({email: member})
-                  if(!user || user === null){
-                      _notMember.push(member)
-                  } else {
-                      let userDoc = {
-                          user: {details: user._id}
-                      }
-                      _members.push(userDoc)
-                      _users.push(user._id)
-                  }
-                  if (index === members.length -1) resolve();
-            })
-          })
-
-          memberSetup.then(() => {
-            let _standup = new standupModel({
-                name,
-                organisationId,
-                teamName,
-                members: _members,
-                statusTypes,
-                occurrence,
-                key: nanoid() + '.' + key.toUpperCase(),
-                start: newStartDate1,
-                end: newEndDate1
-              });
-              _standup
-                .save()
-                .then((created) => {
-                  // console.log(_users)
-                  activity(created._id, "New StandUp", "Standup", _users, null, null, null, req.user.name)
-                    return res.status(200).json({ result: created, msg: "Success"});
-                    //Activity
-                })
-          })
-        } else {
+        if(!userOrg) {
           return res.status(201).json({ result: "Permission Required", msg: "Error"});
+        } else {
+          if(userOrg.role === "ADMIN" || userOrg.permissions.includes("STANDUP-CREATOR")) {
+            let _members = [] //INVITE
+            let _notMember = []
+            let _users = []
+  
+            key = key.toUpperCase()
+  
+            let newStartDate = new Date(occurrence.dtstart)
+            let newStartDate1 = new Date(Date.UTC(newStartDate.getUTCFullYear(), newStartDate.getUTCMonth(), newStartDate.getUTCDate()))
+            let newEndDate = new Date(end)
+            let newEndDate1 = new Date(Date.UTC(newEndDate.getUTCFullYear(), newEndDate.getUTCMonth(), newEndDate.getUTCDate()))
+  
+            occurrence.dtstart = newStartDate1
+  
+            // const newRule = new RRule(occurrence)
+            // console.log(newRule.all())
+  
+            let memberSetup = new Promise((resolve, reject) => {
+  
+              if(!statusTypes || statusTypes === null) {
+                  statusTypes = ['Worked On', 'Working On', 'Blocker'];
+              }
+  
+              if(includeMe === true) {
+                  let userDoc = {
+                      user: {
+                        details: req.user._id,
+                        role: "Admin"
+                      },
+                  }
+                  _members.push(userDoc)
+              }
+  
+              members.forEach(async (member, index) => {
+                  let user = await userModel.findOne({email: member})
+                    if(!user || user === null){
+                        _notMember.push(member)
+                    } else {
+                        let userDoc = {
+                            user: {details: user._id}
+                        }
+                        _members.push(userDoc)
+                        _users.push(user._id)
+                    }
+                    if (index === members.length -1) resolve();
+              })
+            })
+  
+            memberSetup.then(() => {
+              let _standup = new standupModel({
+                  name,
+                  organisationId,
+                  teamName,
+                  members: _members,
+                  statusTypes,
+                  occurrence,
+                  key: nanoid() + '.' + key.toUpperCase(),
+                  start: newStartDate1,
+                  end: newEndDate1
+                });
+                _standup
+                  .save()
+                  .then((created) => {
+                    // console.log(_users)
+                    activity(created._id, "New StandUp", "Standup", _users, null, null, null, req.user.name)
+                      return res.status(200).json({ result: created, msg: "Success"});
+                      //Activity
+                  })
+            })
+          } else {
+            return res.status(201).json({ result: "Permission Required", msg: "Error"});
+          }
         }
       }
     } catch (err) {
