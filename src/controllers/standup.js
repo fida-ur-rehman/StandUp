@@ -122,6 +122,26 @@ class Standup {
       }
   }
 
+  async getOrgStandup(req, res) {
+    try {
+        let {organisationId} = req.body;
+        if(!organisationId) {
+          return res.status(201).json({ result: "Data Missing", msg: "Error"});
+        } else {
+          let _standup = await standupModel.findOne({organisationId: mongoose.Types.ObjectId(organisationId)})
+          .populate("members.user.details")
+          if (_standup) {
+            let _standupCheck = checkUserStatus(_standup)
+            
+          return res.status(200).json({ result: _standupCheck.standup, msg: "Success"});
+          }
+        }
+    } catch (err) {
+          console.log(err)
+          res.status(500).json({ result: err, msg: "Error"});
+    }
+}
+
   async userStandup(req, res) {
     try {
       let {option} = req.body

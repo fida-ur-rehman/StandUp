@@ -6,6 +6,7 @@ const { isAuthorized } = require("../middleware/auth");
 router.get("/all", standupController.allStandup);
 router.post("/single", isAuthorized, standupController.getStandup);
 router.get("/userStandup", isAuthorized, standupController.userStandup);
+router.post("/org", isAuthorized, standupController.getOrgStandup);
 router.post("/create", isAuthorized, standupController.createStandup);
 router.post("/edit", isAuthorized, standupController.editStandup); 
 router.post("/fullEdit", isAuthorized, standupController.editWholeStandup);
