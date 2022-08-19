@@ -3,7 +3,7 @@ const router = express.Router();
 const planController = require("../controllers/plan");
 const { isAdmin } = require("../middleware/isAdmin");
 
-router.get("/all", isAdmin, planController.allPlan);
+router.get("/all", planController.allPlan);
 router.post("/single", isAdmin, planController.getPlan);
 router.post("/create", isAdmin, planController.createPlan);
 router.post("/edit", isAdmin, planController.editPlan);
