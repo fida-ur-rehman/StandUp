@@ -119,7 +119,7 @@ async getUserOrganisationDetails(req, res) {
         {$unset: ["organisations.payment", "organisations.plan", "organisations.teams", "organisations.creation"]}
       ])
       if (User) {
-        return res.status(200).json({ result: User, msg: "Success"});
+        return res.status(200).json({ result: User[0], msg: "Success"});
       }
   } catch (err) {
         console.log(err)
