@@ -107,7 +107,7 @@ class Organisation {
             _organisation
               .save()
               .then( async (created) => {
-                let addOrgToUser = await userModel.updateOne({email: req.user.email}, {$addToSet: {"organisations": {"organisationId": created._id}}})
+                let addOrgToUser = await userModel.updateOne({email: req.user.email}, {$addToSet: {"organisations": {"organisationId": created._id, "role": "ADMIN"}}})
                 if(addOrgToUser.nModified === 1) {
                   return res.status(200).json({ result: created, msg: "Success"});
                 } else {
