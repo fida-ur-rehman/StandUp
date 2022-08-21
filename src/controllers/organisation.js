@@ -172,12 +172,12 @@ class Organisation {
 
     async changeRole(req, res) {
       try {
-          let {organisationId, userId, role} = req.body;
-          if(!organisationId || !userId) {
+          let {organisationId, users, role} = req.body;
+          if(!organisationId || !users) {
               return res.status(201).json({ result: "Data Missing", msg: "Error"});
           } else {
             let _role = ["MEMBER", "ADMIN"]
-              let _organisation = await userModel.updateOne({_id: mongoose.Types.ObjectId(userId), "organisations.organisationId": organisationId}, {$set: {"organisations.$.role": _role[role]}})
+              let _organisation = await userModel.updateOne({_id: {$in: users}, "organisations.organisationId": organisationId}, {$set: {"organisations.$.role": _role[role]}})
               if(_organisation.nModified === 1) {
                   return res.status(200).json({ result: "Updated", msg: "Success" });
               } else {
@@ -192,12 +192,12 @@ class Organisation {
 
   async addPermission(req, res) {
     try {
-        let {organisationId, userId, permission} = req.body;
-        if(!organisationId || !userId) {
+        let {organisationId, users, permission} = req.body;
+        if(!organisationId || !users) {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
         } else {
           let _permissions = ["STANDUP-CREATOR"]
-            let _organisation = await userModel.updateOne({_id: mongoose.Types.ObjectId(userId), "organisations.organisationId": organisationId}, {$addToSet: {"organisations.$.permissions": _permissions[permission]}})
+            let _organisation = await userModel.updateOne({_id: {$in: users}, "organisations.organisationId": organisationId}, {$addToSet: {"organisations.$.permissions": _permissions[permission]}})
             if(_organisation.nModified === 1) {
                 return res.status(200).json({ result: "Updated", msg: "Success" });
             } else {
@@ -211,12 +211,12 @@ class Organisation {
 }
 async removePermission(req, res) {
   try {
-      let {organisationId, userId, permission} = req.body;
-      if(!organisationId || !userId) {
+      let {organisationId, users, permission} = req.body;
+      if(!organisationId || !users) {
           return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
         let _permissions = ["STANDUP-CREATOR"]
-          let _organisation = await userModel.updateOne({_id: mongoose.Types.ObjectId(userId), "organisations.organisationId": organisationId}, {$pull: {"organisations.$.permissions": _permissions[permission]}})
+          let _organisation = await userModel.updateOne({_id: {$in: users}, "organisations.organisationId": organisationId}, {$pull: {"organisations.$.permissions": _permissions[permission]}})
           if(_organisation.nModified === 1) {
               return res.status(200).json({ result: "Updated", msg: "Success" });
           } else {
@@ -231,11 +231,11 @@ async removePermission(req, res) {
 
   async removeMember(req, res) {
     try {
-        let {organisationId, userId} = req.body;
-        if(!organisationId || !userId) {
+        let {organisationId, users} = req.body;
+        if(!organisationId || !users) {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
         } else {
-            let _user = await userModel.updateOne({_id: mongoose.Types.ObjectId(userId)}, {$pull: {"organisations": {organisationId}}})
+            let _user = await userModel.updateOne({_id: {$in: users}}, {$pull: {"organisations": {organisationId}}})
             if(_user.nModified === 1) {
                 return res.status(200).json({ result: "Updated", msg: "Success" });
             } else {
