@@ -83,16 +83,21 @@ async usersJoinRequest(req, res) {
         if(getJr) {
             return res.status(200).json({ result: "Already Exist", msg: "Success"});
         } else {
+          let userOrg = req.user.organisations.find( org => org['organisationId'] == organisationId)
+          if(!userOrg) {
+            return res.status(200).json({ result: "Already Exist", msg: "Success"});
+          } else {
             let _joinRequest = new joinRequestModel({
-                organisationId,
-                userId: req.user._id,
-                userName: req.user.name
-          });
-          _joinRequest
-            .save()
-            .then((created) => {
-                return res.status(200).json({ result: "Created", msg: "Success"});
-            })
+              organisationId,
+              userId: req.user._id,
+              userName: req.user.name
+        });
+        _joinRequest
+          .save()
+          .then((created) => {
+              return res.status(200).json({ result: "Created", msg: "Success"});
+          })
+          }
         }   
       }
     } catch (err) {
