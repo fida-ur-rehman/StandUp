@@ -177,8 +177,8 @@ class Organisation {
               return res.status(201).json({ result: "Data Missing", msg: "Error"});
           } else {
             let _role = ["MEMBER", "ADMIN"]
-              let _organisation = await userModel.updateOne({_id: {$in: users}, "organisations.organisationId": organisationId}, {$set: {"organisations.$.role": _role[role]}})
-              if(_organisation.nModified === 1) {
+              let _organisation = await userModel.updateMany({_id: {$in: users}, "organisations.organisationId": organisationId}, {$set: {"organisations.$.role": _role[role]}})
+              if(_organisation.nModified === users.length) {
                   return res.status(200).json({ result: "Updated", msg: "Success" });
               } else {
                   return res.status(201).json({ result: "Not Found", msg: "Error"});
@@ -197,8 +197,8 @@ class Organisation {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
         } else {
           let _permissions = ["STANDUP-CREATOR"]
-            let _organisation = await userModel.updateOne({_id: {$in: users}, "organisations.organisationId": organisationId}, {$addToSet: {"organisations.$.permissions": _permissions[permission]}})
-            if(_organisation.nModified === 1) {
+            let _organisation = await userModel.updateMany({_id: {$in: users}, "organisations.organisationId": organisationId}, {$addToSet: {"organisations.$.permissions": _permissions[permission]}})
+            if(_organisation.nModified === users.length) {
                 return res.status(200).json({ result: "Updated", msg: "Success" });
             } else {
                 return res.status(201).json({ result: "Not Found", msg: "Error"});
@@ -216,8 +216,8 @@ async removePermission(req, res) {
           return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
         let _permissions = ["STANDUP-CREATOR"]
-          let _organisation = await userModel.updateOne({_id: {$in: users}, "organisations.organisationId": organisationId}, {$pull: {"organisations.$.permissions": _permissions[permission]}})
-          if(_organisation.nModified === 1) {
+          let _organisation = await userModel.updateMany({_id: {$in: users}, "organisations.organisationId": organisationId}, {$pull: {"organisations.$.permissions": _permissions[permission]}})
+          if(_organisation.nModified === users.length) {
               return res.status(200).json({ result: "Updated", msg: "Success" });
           } else {
               return res.status(201).json({ result: "Not Found", msg: "Error"});
@@ -235,8 +235,8 @@ async removePermission(req, res) {
         if(!organisationId || !users) {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
         } else {
-            let _user = await userModel.updateOne({_id: {$in: users}}, {$pull: {"organisations": {organisationId}}})
-            if(_user.nModified === 1) {
+            let _user = await userModel.updateMany({_id: {$in: users}}, {$pull: {"organisations": {organisationId}}})
+            if(_user.nModified === users.length) {
                 return res.status(200).json({ result: "Updated", msg: "Success" });
             } else {
                 return res.status(201).json({ result: "Not Found", msg: "Error"});
