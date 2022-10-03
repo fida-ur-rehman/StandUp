@@ -50,6 +50,7 @@ class Team {
 
 
         /// Member Setup
+        //name and Id
 
 
         ////

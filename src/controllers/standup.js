@@ -223,8 +223,8 @@ class Standup {
 
   async createStandup(req, res) {
     try {
-      let { name, organisationId, teamName, members, includeMe, statusTypes, start, end, occurrence, key} = req.body
-      if(!name || !organisationId || !teamName || !members || !includeMe || !start || !end || !occurrence || !key) {
+      let { name, organisationId, teamName, members, includeMe, statusTypes, start, end, occurrence, key, description} = req.body
+      if(!name || !organisationId || !teamName || !members || !includeMe || !start || !end || !occurrence || !key || !description) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
         let userOrg = req.user.organisations.find( org => org['organisationId'] == organisationId)

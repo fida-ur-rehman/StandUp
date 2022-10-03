@@ -84,7 +84,7 @@ async usersJoinRequest(req, res) {
             return res.status(200).json({ result: "Already Exist", msg: "Success"});
         } else {
           let userOrg = req.user.organisations.find( org => org['organisationId'] == organisationId)
-          if(!userOrg) {
+          if(userOrg) {
             return res.status(200).json({ result: "Already Exist", msg: "Success"});
           } else {
             let _joinRequest = new joinRequestModel({
