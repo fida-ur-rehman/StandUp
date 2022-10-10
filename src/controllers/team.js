@@ -38,6 +38,25 @@ class Team {
       }
   }
 
+  async orgTeams(req, res) {
+    try {
+        let {orgId} = req.body;
+        if(!orgId) {
+          return res.status(201).json({ result: "Data Missing", msg: "Error"});
+        } else {
+          let _team = await teamModel.find({organisation: mongoose.Types.ObjectId(orgId)})
+          if (_team) {
+            return res.status(200).json({ result: _team, msg: "Success"});
+          } else {
+            return res.status(201).json({ result: "Not Found" , msg: "Success"});
+          }
+        }
+    } catch (err) {
+          console.log(err)
+          res.status(500).json({ result: err, msg: "Error"});
+    }
+}
+
   async createTeam(req, res) {
     try {
       let { name, organisation, members} = req.body
@@ -45,16 +64,19 @@ class Team {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
 
-        
-        ///
+//         let _members = []
+//         members.forEach(element => {
+          
+//         });
+//         ///
 
 
-        /// Member Setup
-        //name and Id
+//         /// Member Setup
+//         //name and Id
 
 
-        ////
-// ..
+//         ////
+// // ..
 
           let _team = new teamModel({
             name,
@@ -73,26 +95,69 @@ class Team {
     }
   }
 
-  async editTeam(req, res) {
+  async editName(req, res) {
     try {
-        let {teamId} = req.body;
-          if(!teamId) {
+        let {teamId, name} = req.body;
+          if(!teamId || !name) {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
           } else {
-            const updateOps = {};
-            for(const ops of req.body.data){
-                updateOps[ops.propName] = ops.value;
-            }
-            let _team = await teamModel.updateOne({_id: teamId}, {
-                $set: updateOps
+            let _team = await teamModel.updateOne({_id: mongoose.Types.ObjectId(teamId)}, {
+                $set: {name}
             });
-            // console.log(updateOps)
-            if(_team.modifiedCount === 1) {
+            if(_team.nModified === 1) {
                return res.status(200).json({ result: "Updated", msg: "Success" });
             } else {
                 return res.status(201).json({ result: "Not Found", msg: "Error"});
             }
           }
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
+
+  async addMembers(req, res) {
+    try {
+        let {teamId, members} = req.body;
+          if(!teamId || !members) {
+            return res.status(201).json({ result: "Data Missing", msg: "Error"});
+          } else {
+            members.forEach(async (mem, index) => {
+
+              let _team = await teamModel.updateOne({_id: teamId, "members": {"$not": {"$elemMatch": {"userId": mem.userId}}}}, {
+                $addToSet: {members: mem}
+            });
+            if (index === members.length -1) {
+ 
+                return res.status(200).json({ result: "Updated", msg: "Success" });
+                // resolve()
+
+            };
+            });
+          }
+    } catch (err) {
+      console.log(err)
+      return res.status(500).json({ result: err, msg: "Error"});
+    }
+  }
+
+  async removeMembers(req, res) {
+    try {
+        let {teamId, members} = req.body;
+          if(!teamId || !members) {
+            return res.status(201).json({ result: "Data Missing", msg: "Error"});
+          } else {
+            members.forEach(async (mem, index) => {
+
+              let _team = await teamModel.updateOne({_id: teamId}, {
+                $pull: {members: mem}
+            });
+            if (index === members.length -1) {
+                return res.status(200).json({ result: "Updated", msg: "Success" });
+                // resolve()
+          }
+        });
+        }
     } catch (err) {
       console.log(err)
       return res.status(500).json({ result: err, msg: "Error"});
