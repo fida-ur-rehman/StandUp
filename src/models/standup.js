@@ -58,7 +58,11 @@ const standupSchema = new mongoose.Schema(
       lastSubmittedBy: [{
         userId: {type: ObjectId, ref: "User", require: true},
         date: {type: Date}
-      }]
+      }],
+      jira: {
+        type: Boolean,
+        default: false
+    },
     },
   { timestamps: true }
 );
