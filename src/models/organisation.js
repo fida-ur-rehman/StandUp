@@ -41,6 +41,11 @@ const organisationSchema = new mongoose.Schema(
       enum: ["Admin", "Self"],
       require: true,
       default: "Self"
+    },
+    jira: {
+      email: {type: String},
+      baseUrl: {type: String},
+      accessToken: {type: Object}
     }
 
   },
