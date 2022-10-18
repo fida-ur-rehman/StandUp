@@ -224,6 +224,7 @@ class Standup {
   async createStandup(req, res) {
     try {
       let { name, organisationId, teamName, members, includeMe, statusTypes, start, end, occurrence, key, description} = req.body
+      console.log( name, organisationId, teamName, members, includeMe, statusTypes, start, end, occurrence, key, description)
       if(!name || !organisationId || !teamName || !members || !includeMe || !start || !end || !occurrence || !key || !description) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
