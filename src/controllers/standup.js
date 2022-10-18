@@ -512,6 +512,25 @@ class Standup {
     }
   }
 
+  async setJira(req, res) {
+    try {
+      let {standupId, state} = req.body;
+      if(!standupId || !state) {
+          return res.status(201).json({ result: "Data Missing", msg: "Error"});
+      } else {
+          let _standup = await standupModel.updateOne({_id: standupId}, {$set: {jira: state}})
+          if(_standup.nModified === 1) {
+              return res.status(200).json({ result: "Updated", msg: "Success" });
+          } else {
+              return res.status(201).json({ result: "Not Found", msg: "Error"});
+          }
+      }
+  } catch (err) {
+  console.log(err)
+  return res.status(500).json({ result: err, msg: "Error"});
+  }
+}
+
     async statusPerOccurence(req, res) {
       try {
         let {standupId} = req.body;
