@@ -3,13 +3,13 @@ const router = express.Router();
 const joinRequestController = require("../controllers/joinRequest");
 const { isAuthorized } = require("../middleware/auth");
 
-router.get("/all", isAuthorized, joinRequestController.allJoinRequest);
-router.post("/single", isAuthorized, joinRequestController.getJoinRequest);
-router.post("/org", isAuthorized, joinRequestController.organisationsJoinRequest);
-router.get("/user", isAuthorized, joinRequestController.usersJoinRequest);
-router.post("/create", isAuthorized, joinRequestController.createJoinRequest);
-router.post("/changeStatus", isAuthorized, joinRequestController.changeStatus);
-router.post("/delete", isAuthorized, joinRequestController.deletedJoinRequest);
+router.get("/all",  joinRequestController.allJoinRequest);
+router.post("/single",  joinRequestController.getJoinRequest);
+router.post("/org",  joinRequestController.organisationsJoinRequest);
+router.get("/user",  joinRequestController.usersJoinRequest);
+router.post("/create",  joinRequestController.createJoinRequest);
+router.post("/changeStatus",  joinRequestController.changeStatus);
+router.post("/delete",  joinRequestController.deletedJoinRequest);
 
 
 module.exports = router;

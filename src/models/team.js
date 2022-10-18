@@ -10,7 +10,7 @@ const teamSchema = new mongoose.Schema(
       require: true
     },
     organisation: {type: ObjectId, ref: "Organisation", require: true},
-    memebers: [{type: ObjectId, ref: "User", require: true}],
+    members: [{userId: {type: ObjectId, ref: "User", require: true}, email: {type: String, require: true}}],
   },
   { timestamps: true }
 );

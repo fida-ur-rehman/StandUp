@@ -31,7 +31,7 @@ const storage = new GridFsStorage({
   });
   const upload = multer({ storage });
 
-router.get("/all", isAuthorized, usersController.allUser);
+router.get("/all", usersController.allUser);
 router.get("/single", isAuthorized, usersController.getUser);
 router.get("/adminUsers", isAdmin, usersController.getAdminUsers);
 router.post("/singleByEmail", isAdmin, usersController.getUserByEmail);

@@ -22,7 +22,7 @@ const { socketConnection } = require('./socket');
 const app = express()
 const Server = require('http').Server(app);
 socketConnection(Server);
-const port = process.env.PORT || 3002
+const port = process.env.PORT || 3005
 
 //MIDDLEWAREs
 app.use(cors())
