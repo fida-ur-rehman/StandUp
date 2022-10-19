@@ -66,7 +66,7 @@ class Jira {
           if(!issueId || !orgId) {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
           } else {
-            let _org = await organisationModel.findOne({_id: mongoose.Types.ObjectI(orgId)})
+            let _org = await organisationModel.findOne({_id: mongoose.Types.ObjectId(orgId)})
             if(!_org) {
               return res.status(201).json({ result: "Data Missing", msg: "Error"});
             } else {
@@ -113,7 +113,7 @@ class Jira {
         if(!issueId || !standupId || !orgId) {
           return res.status(201).json({ result: "Data Missing", msg: "Error"});
         } else {
-          let _org = await organisationModel.findOne({_id: mongoose.Types.ObjectI(orgId)})
+          let _org = await organisationModel.findOne({_id: mongoose.Types.ObjectId(orgId)})
             if(!_org) {
               return res.status(201).json({ result: "Data Missing", msg: "Error"});
             } else {
