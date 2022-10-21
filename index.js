@@ -195,8 +195,8 @@ function checkIfToday(rruleStr){
     })
   
 //LISTEN
-Server.listen(3003, () => {
-  console.log(`Running on 3003 http://localhost:${3003}`)
+Server.listen(port, () => {
+  console.log(`Running on port http://localhost:${port}`)
 })
 
 
