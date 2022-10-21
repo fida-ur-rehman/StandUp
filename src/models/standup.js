@@ -44,7 +44,13 @@ const standupSchema = new mongoose.Schema(
           default: "Not Started",
           require: true
       },
-      occurrence: {},
+      occurrence: {
+        // inWord: {
+        //   type: String,
+        //   require: true,
+        //   default: "No Occurrence"
+        // }
+      },
       occured: {type: Number, default: 0},
       key: {type: String},
       lastTaskId: {type: Number, default: 0},

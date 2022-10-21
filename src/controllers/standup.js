@@ -245,9 +245,10 @@ class Standup {
             let newEndDate1 = new Date(Date.UTC(newEndDate.getUTCFullYear(), newEndDate.getUTCMonth(), newEndDate.getUTCDate()))
   
             occurrence.dtstart = newStartDate1
+           
   
-            // const newRule = new RRule(occurrence)
-            // console.log(newRule.all())
+            const newRule = new RRule(occurrence)
+            occurrence.inWord = newRule.toText()
   
             let memberSetup = new Promise((resolve, reject) => {
   
