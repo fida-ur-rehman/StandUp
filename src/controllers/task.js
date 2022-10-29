@@ -13,6 +13,7 @@ const { commentModel } = require("../models/comment");
 const { statusModel } = require("../models/status");
 const moment = require("moment");
 const { setPerformance } = require("../middleware/setPerformance");
+const { organisationModel } = require("../models/organisation");
 // function createTaskId(taskSeries, lastTaskId){
 //   let _lastTaskId = lastTaskId + 1
 //   let mainId = taskSeries + '-' +  _lastTaskId 
@@ -183,80 +184,86 @@ async taskDetails(req, res) {
 
   async createTask(req, res) {
     try {
-      let { title, desc, standupId, labels, taskSeries, lastTaskId, assignee, due} = req.body
+      let { title, desc, standupId, labels, taskSeries, lastTaskId, assignee, due, organisationId} = req.body
       console.log(title, desc, standupId, labels, taskSeries, assignee, due)
-      if(!title || !desc || !standupId || !labels || !taskSeries) {
+      if(!title || !desc || !standupId || !labels || !taskSeries || !organisationId) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
-        let mainTaskId = createTaskId(taskSeries, lastTaskId)
-        let [ a, displayTaskId] = mainTaskId.split('.')
-        let _assignee = {};
-        let _users;
-        let _newTask = {};
-        let memberSetup = new Promise((resolve, reject) => {
-          if(!assignee) {
-            _assignee = null
+        let _org = await organisationModel.findOne({_id: mongoose.Types.ObjectId(organisationId)})
+        let _standup = await standupModel.findOne({_id: mongoose.Types.ObjectId(standupId)})
+        if(_org.plan.taskPerStandup <= _standup.lastTaskId) {
+          return res.status(201).json({ result: "Plan Exceeds", msg: "Error"});
+        } else {
+          let mainTaskId = createTaskId(taskSeries, lastTaskId)
+          let [ a, displayTaskId] = mainTaskId.split('.')
+          let _assignee = {};
+          let _users;
+          let _newTask = {};
+          let memberSetup = new Promise((resolve, reject) => {
+            if(!assignee) {
+              _assignee = null
+              resolve();
+            } else {
+              _users = [assignee.details];
+              _assignee = {
+                name: assignee.name,
+                details: assignee.details
+              }
+            }
             resolve();
-          } else {
-            _users = [assignee.details];
-            _assignee = {
-              name: assignee.name,
-              details: assignee.details
+          })
+          memberSetup.then(() => {
+            if(!due){
+              _newTask = {
+                title,
+                desc,
+                taskId: mainTaskId, //calculate unique
+                displayTaskId,
+                assignee: _assignee,
+                userId: req.user._id,
+                userName: req.user.name,
+                standupId,
+                labels,
+                start: new Date(),
+              }
+            } else {
+              _newTask = {
+                title,
+                desc,
+                taskId: mainTaskId, //calculate unique
+                displayTaskId,
+                assignee: _assignee,
+                userId: req.user._id,
+                userName: req.user.name,
+                standupId,
+                labels,
+                start: new Date(),
+                due
+              }
             }
-          }
-          resolve();
-        })
-        memberSetup.then(() => {
-          if(!due){
-            _newTask = {
-              title,
-              desc,
-              taskId: mainTaskId, //calculate unique
-              displayTaskId,
-              assignee: _assignee,
-              userId: req.user._id,
-              userName: req.user.name,
-              standupId,
-              labels,
-              start: new Date(),
-            }
-          } else {
-            _newTask = {
-              title,
-              desc,
-              taskId: mainTaskId, //calculate unique
-              displayTaskId,
-              assignee: _assignee,
-              userId: req.user._id,
-              userName: req.user.name,
-              standupId,
-              labels,
-              start: new Date(),
-              due
-            }
-          }
-          let _task = new taskModel(_newTask);
-          _task
-            .save()
-            .then(async (created) => {
-                if(assignee === null){
-                  let _updateStandup = await standupModel.updateOne({_id: standupId}, {$inc: {lastTaskId: 1}, })
-                  if(_updateStandup.nModified === 1){
-                    activity(created._id, "New Task Created", "Task", null, standupId, null, null, req.user.name)
-                    return res.status(200).json({ result: _task, msg: "Success"});
+            let _task = new taskModel(_newTask);
+            _task
+              .save()
+              .then(async (created) => {
+                  if(assignee === null){
+                    let _updateStandup = await standupModel.updateOne({_id: standupId}, {$inc: {lastTaskId: 1}, })
+                    if(_updateStandup.nModified === 1){
+                      activity(created._id, "New Task Created", "Task", null, standupId, null, null, req.user.name)
+                      return res.status(200).json({ result: _task, msg: "Success"});
+                    }
+                  } else {
+                    let _updateStandup = await standupModel.updateOne({_id: standupId, "members.user.details": assignee.details}, {$inc: {lastTaskId: 1, "members.$.performance.inProgress": 1}, })
+                    if(_updateStandup.nModified === 1){
+                      // setPerformance()
+                      activity(created._id, "New Task Assigned", "Task", _users, standupId, null, null, req.user.name)
+                      return res.status(200).json({ result: _task, msg: "Success"});
+                    }
                   }
-                } else {
-                  let _updateStandup = await standupModel.updateOne({_id: standupId, "members.user.details": assignee.details}, {$inc: {lastTaskId: 1, "members.$.performance.inProgress": 1}, })
-                  if(_updateStandup.nModified === 1){
-                    // setPerformance()
-                    activity(created._id, "New Task Assigned", "Task", _users, standupId, null, null, req.user.name)
-                    return res.status(200).json({ result: _task, msg: "Success"});
-                  }
-                }
-
-              
-            })
-        })
+  
+                
+              })
+          })
+        }
       }
     } catch (err) {
       console.log(err)

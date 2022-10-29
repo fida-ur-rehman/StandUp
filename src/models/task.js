@@ -8,6 +8,7 @@ const taskSchema = new mongoose.Schema(
     title: {type: String, require: true},
     desc: { type: String, require: true},
     status: {type: String, enum: taskStatus, require: true, default: "In Progress"},
+    organisationId: {type: ObjectId, ref: "Organisation", require: true},
     taskId: {type: String, unique:true, require: true},
     displayTaskId: {type: String, require: true},
     jiraId: {type: String, default: null},

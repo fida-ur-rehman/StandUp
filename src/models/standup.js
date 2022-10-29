@@ -68,7 +68,11 @@ const standupSchema = new mongoose.Schema(
       jira: {
         type: Boolean,
         default: false
-    },
+      },
+      export: {
+      type: Boolean,
+      default: false
+      },
     },
   { timestamps: true }
 );

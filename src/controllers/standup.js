@@ -21,6 +21,7 @@ const moment = require('moment');
 
 const { RRule, RRuleSet, rrulestr } = require('rrule');
 const { taskModel } = require("../models/task");
+const { organisationModel } = require("../models/organisation");
 
 function checkIfToday(rruleStr){
   let rule = new RRule(rruleStr);
@@ -232,78 +233,91 @@ class Standup {
         if(!userOrg) {
           return res.status(201).json({ result: "Permission Required", msg: "Error"});
         } else {
-          if(userOrg.role === "ADMIN" || userOrg.permissions.includes("STANDUP-CREATOR")) {
-            let _members = [] //INVITE
-            let _notMember = []
-            let _users = []
-  
-            key = key.toUpperCase()
-  
-            let newStartDate = new Date(occurrence.dtstart)
-            let newStartDate1 = new Date(Date.UTC(newStartDate.getUTCFullYear(), newStartDate.getUTCMonth(), newStartDate.getUTCDate()))
-            let newEndDate = new Date(end)
-            let newEndDate1 = new Date(Date.UTC(newEndDate.getUTCFullYear(), newEndDate.getUTCMonth(), newEndDate.getUTCDate()))
-  
-            occurrence.dtstart = newStartDate1
-           
-  
-            const newRule = new RRule(occurrence)
-            occurrence.inWord = newRule.toText()
-  
-            let memberSetup = new Promise((resolve, reject) => {
-  
-              if(!statusTypes || statusTypes === null) {
-                  statusTypes = ['Worked On', 'Working On', 'Blocker'];
-              }
-  
-              if(includeMe === true) {
-                  let userDoc = {
-                      user: {
-                        details: req.user._id,
-                        role: "Admin"
-                      },
+          let _org1 = await organisationModel.findOne({_id: mongoose.Types.ObjectId(organisationId)}) 
+          if(_org1) {
+            if(userOrg.role === "ADMIN" || userOrg.permissions.includes("STANDUP-CREATOR")) {
+              if(_org1.plan.standups <= _org1.plan.CStandups) {
+                let _members = [] //INVITE
+                let _notMember = []
+                let _users = []
+      
+                key = key.toUpperCase()
+      
+                let newStartDate = new Date(occurrence.dtstart)
+                let newStartDate1 = new Date(Date.UTC(newStartDate.getUTCFullYear(), newStartDate.getUTCMonth(), newStartDate.getUTCDate()))
+                let newEndDate = new Date(end)
+                let newEndDate1 = new Date(Date.UTC(newEndDate.getUTCFullYear(), newEndDate.getUTCMonth(), newEndDate.getUTCDate()))
+      
+                occurrence.dtstart = newStartDate1
+               
+      
+                const newRule = new RRule(occurrence)
+                occurrence.inWord = newRule.toText()
+      
+                let memberSetup = new Promise((resolve, reject) => {
+      
+                  if(!statusTypes || statusTypes === null) {
+                      statusTypes = ['Worked On', 'Working On', 'Blocker'];
                   }
-                  _members.push(userDoc)
-              }
-  
-              members.forEach(async (member, index) => {
-                  let user = await userModel.findOne({email: member})
-                    if(!user || user === null){
-                        _notMember.push(member)
-                    } else {
-                        let userDoc = {
-                            user: {details: user._id}
+      
+                  if(includeMe === true) {
+                      let userDoc = {
+                          user: {
+                            details: req.user._id,
+                            role: "Admin"
+                          },
+                      }
+                      _members.push(userDoc)
+                  }
+      
+                  members.forEach(async (member, index) => {
+                      let user = await userModel.findOne({email: member})
+                        if(!user || user === null){
+                            _notMember.push(member)
+                        } else {
+                            let userDoc = {
+                                user: {details: user._id}
+                            }
+                            _members.push(userDoc)
+                            _users.push(user._id)
                         }
-                        _members.push(userDoc)
-                        _users.push(user._id)
-                    }
-                    if (index === members.length -1) resolve();
-              })
-            })
-  
-            memberSetup.then(() => {
-              let _standup = new standupModel({
-                  name,
-                  organisationId,
-                  teamName,
-                  members: _members,
-                  statusTypes,
-                  occurrence,
-                  key: nanoid() + '.' + key.toUpperCase(),
-                  start: newStartDate1,
-                  end: newEndDate1
-                });
-                _standup
-                  .save()
-                  .then((created) => {
-                    // console.log(_users)
-                    activity(created._id, "New StandUp", "Standup", _users, null, null, null, req.user.name)
-                      return res.status(200).json({ result: created, msg: "Success"});
-                      //Activity
+                        if (index === members.length -1) resolve();
                   })
-            })
+                })
+      
+                memberSetup.then(() => {
+                  let _standup = new standupModel({
+                      name,
+                      organisationId,
+                      teamName,
+                      members: _members,
+                      statusTypes,
+                      occurrence,
+                      key: nanoid() + '.' + key.toUpperCase(),
+                      start: newStartDate1,
+                      end: newEndDate1
+                    });
+                    _standup
+                      .save()
+                      .then( async (created) => {
+                        // console.log(_users)
+                        if(created) {
+                          let _org = await organisationModel.updateOne({_id: organisationId}, {$inc: {"plan.Cstandups": 1}})
+                          activity(created._id, "New StandUp", "Standup", _users, null, null, null, req.user.name)
+                          return res.status(200).json({ result: created, msg: "Success"});
+                        }
+
+                          //Activity
+                      })
+                }) 
+              } else {
+                return res.status(201).json({ result: "Plan Exceeds", msg: "Error"});
+              }
+            } else {
+              return res.status(201).json({ result: "Permission Required", msg: "Error"});
+            }
           } else {
-            return res.status(201).json({ result: "Permission Required", msg: "Error"});
+            return res.status(201).json({ result: "Invalid Organisation", msg: "Error"});
           }
         }
       }
@@ -422,33 +436,39 @@ class Standup {
           if(!standupId || !members) {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
           } else {
-            let _members = [] //INVITE
-            let _notMember = []
-
-            let memberSetup = new Promise((resolve, reject) => {
-
-                members.forEach(async (member, index) => {
-                    let user = await userModel.findOne({email: member})
-                    if(!user || user === null){
-                        _notMember.push(member)
-                    } else {
-                        let userDoc = {
-                            user: {details: user._id}
-                        }
-                        _members.push(userDoc)
-                    }
-                    if (index === members.length -1) resolve();
-                })
-            })
-
-            memberSetup.then( async() => {
-                let _standup = await standupModel.updateOne({_id: standupId}, {$addToSet: {members: _members}}) //BUG
-                if(_standup.nModified === 1) {
-                    return res.status(200).json({ result: "Updated", msg: "Success" });
-                } else {
-                  return res.status(200).json({ result: "Not Updated", msg: "Error" });
-                }
+            let _standup1 = await standupModel.findOne({_id: mongoose.Types.ObjectId(standupId)})
+            let _org1 = await organisationModel.findOne({_id: _standup1.organisationId})
+            if(_org1.plan.usersPerStandup <= _standup1.members.length){
+              return res.status(201).json({ result: "Plan Exceeds", msg: "Error"});
+            } else {
+              let _members = [] //INVITE
+              let _notMember = []
+  
+              let memberSetup = new Promise((resolve, reject) => {
+  
+                  members.forEach(async (member, index) => {
+                      let user = await userModel.findOne({email: member})
+                      if(!user || user === null){
+                          _notMember.push(member)
+                      } else {
+                          let userDoc = {
+                              user: {details: user._id}
+                          }
+                          _members.push(userDoc)
+                      }
+                      if (index === members.length -1) resolve();
+                  })
               })
+  
+              memberSetup.then( async() => {
+                  let _standup = await standupModel.updateOne({_id: standupId}, {$addToSet: {members: _members}}) //BUG
+                  if(_standup.nModified === 1) {
+                      return res.status(200).json({ result: "Updated", msg: "Success" });
+                  } else {
+                    return res.status(200).json({ result: "Not Updated", msg: "Error" });
+                  }
+                })
+            }
           }
     } catch (err) {
       console.log(err)
@@ -514,18 +534,27 @@ class Standup {
     }
   }
 
-  async setJira(req, res) {
+  async setAccess(req, res) {
     try {
-      let {standupId, state} = req.body;
-      if(!standupId || !state) {
+      let {standupId, state, accessName,} = req.body;
+      if(!standupId || !state || ! accessName) {
           return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
+        if(accessName === "jira") {
           let _standup = await standupModel.updateOne({_id: standupId}, {$set: {jira: state}})
           if(_standup.nModified === 1) {
               return res.status(200).json({ result: "Updated", msg: "Success" });
           } else {
               return res.status(201).json({ result: "Not Found", msg: "Error"});
           }
+        } else if(accessName === "export") {
+          let _standup = await standupModel.updateOne({_id: standupId}, {$set: {export: state}})
+          if(_standup.nModified === 1) {
+              return res.status(200).json({ result: "Updated", msg: "Success" });
+          } else {
+              return res.status(201).json({ result: "Not Found", msg: "Error"});
+          }
+        }
       }
   } catch (err) {
   console.log(err)

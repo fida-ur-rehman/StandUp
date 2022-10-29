@@ -197,12 +197,22 @@ class Organisation {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
         } else {
           let _permissions = ["STANDUP-CREATOR"]
-            let _organisation = await userModel.updateMany({_id: {$in: users}, "organisations.organisationId": organisationId}, {$addToSet: {"organisations.$.permissions": _permissions[permission]}})
-            if(_organisation.nModified === users.length) {
+          let _org = await organisationModel.findOne({_id: mongoose.Types.ObjectId})
+          if(_org.plan.standupCreators <= _org.plan.CstandupCreators) {
+            let _users = await userModel.updateMany({_id: {$in: users}, "organisations.organisationId": organisationId}, {$addToSet: {"organisations.$.permissions": _permissions[permission]}})
+            if(_users.nModified === users.length) {
+              let _organisation = await organisationModel.updateOne({_id: organisationId}, {$inc: {"plan.CstandupCreators": 1}})
+              if(_organisation.nModified === 1) {
                 return res.status(200).json({ result: "Updated", msg: "Success" });
+              } else {
+                return res.status(201).json({ result: "Organisation Not Found", msg: "Error"});
+              }
             } else {
                 return res.status(201).json({ result: "Not Found", msg: "Error"});
             }
+          } else {
+            return res.status(201).json({ result: "Plan Exceeds", msg: "Error"});
+          }
         }
     } catch (err) {
     console.log(err)
