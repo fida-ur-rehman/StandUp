@@ -237,9 +237,12 @@ class Standup {
           if(_org1) {
             if(userOrg.role === "ADMIN" || userOrg.permissions.includes("STANDUP-CREATOR")) {
               if(_org1.plan.standups <= _org1.plan.CStandups) {
+                return res.status(201).json({ result: "Plan Exceeds", msg: "Error"});
+              } else {
                 let _members = [] //INVITE
                 let _notMember = []
                 let _users = []
+                let _lastSubmittedBy = []
       
                 key = key.toUpperCase()
       
@@ -252,7 +255,7 @@ class Standup {
                
       
                 const newRule = new RRule(occurrence)
-                occurrence.inWord = newRule.toText()
+                let inWord = newRule.toText()
       
                 let memberSetup = new Promise((resolve, reject) => {
       
@@ -267,8 +270,13 @@ class Standup {
                             role: "Admin"
                           },
                       }
+                      let submitter = {
+                        userId: req.user._id
+                      }
+                      _lastSubmittedBy.push(submitter)
                       _members.push(userDoc)
-                  }
+
+                    }
       
                   members.forEach(async (member, index) => {
                       let user = await userModel.findOne({email: member})
@@ -278,13 +286,17 @@ class Standup {
                             let userDoc = {
                                 user: {details: user._id}
                             }
+                            let submitter = {
+                              userId: user._id
+                            }
+                            _lastSubmittedBy.push(submitter)
                             _members.push(userDoc)
                             _users.push(user._id)
                         }
                         if (index === members.length -1) resolve();
                   })
                 })
-      
+      console.log(_members)
                 memberSetup.then(() => {
                   let _standup = new standupModel({
                       name,
@@ -293,6 +305,7 @@ class Standup {
                       members: _members,
                       statusTypes,
                       occurrence,
+                      inWord,
                       key: nanoid() + '.' + key.toUpperCase(),
                       start: newStartDate1,
                       end: newEndDate1
@@ -310,8 +323,6 @@ class Standup {
                           //Activity
                       })
                 }) 
-              } else {
-                return res.status(201).json({ result: "Plan Exceeds", msg: "Error"});
               }
             } else {
               return res.status(201).json({ result: "Permission Required", msg: "Error"});
@@ -569,7 +580,9 @@ class Standup {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
         } else {
           let _standup = await standupModel.findOne({_id: new mongoose.Types.ObjectId(standupId)})
+          
           if(_standup) {
+            
             let types = ["Yearly", "Monthly", "Weekly", "Daily"]
             let names = []
             let currentDate1 = new Date()
@@ -578,7 +591,7 @@ class Standup {
             let rule = new RRule(_standup.occurrence);
             // console.log(rule.all())
             let a = rule.before(currentDate)
-
+            // console.log("aaaa")
             let _output = {
               type: types[_standup.occurrence.freq],
               Recur: rule.toText(),
@@ -587,19 +600,34 @@ class Standup {
 
             let privOccurrence = []
             for (let i = 10; i > 0; i--) {
+
               if(a) {
                 privOccurrence.push(a) 
                 a = rule.before(a)
+
               } else {
                 break;
               }
             }
-            // console.log(privOccurrence)
-            for(let j = (privOccurrence.length)-2 ; j >= 0 ; j--){
-              let _statusCount = await statusModel.find({standupId, "createdAt": {$gte: privOccurrence[j+1], $lte: privOccurrence[j]}}).count()
-              _output.data.push({count: _statusCount, occurrence: privOccurrence[j+1]})
+            console.log(privOccurrence.length)
+            for(let j = privOccurrence.length ; j >= 0 ; j--){
+              console.log("abcd")
+              if(privOccurrence.length === 1) {
+                let _statusCount = await statusModel.find({standupId, "createdAt": {$gte: privOccurrence[j]}}).count()
+                _output.data.push({count: _statusCount, occurrence: privOccurrence[j]})
+              } else {
+                let _statusCount = await statusModel.find({standupId, "createdAt": {$gte: privOccurrence[j+1], $lte: privOccurrence[j]}}).count()
+                _output.data.push({count: _statusCount, occurrence: privOccurrence[j]})
+              }
+     
               // console.log(_statusCount, privOccurrence[j+1])
+              // console.log(j)
+              // if(j=0){
+            
+                
+              // }
             }
+
             return res.status(200).json({ result: _output, msg: "Success" });
           } else {
             return res.status(201).json({ result: "Not Found", msg: "Error"});

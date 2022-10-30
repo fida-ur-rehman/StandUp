@@ -45,12 +45,13 @@ const standupSchema = new mongoose.Schema(
           require: true
       },
       occurrence: {
-        // inWord: {
-        //   type: String,
-        //   require: true,
-        //   default: "No Occurrence"
-        // }
+
       },
+      inWord: {
+          type: String,
+          require: true,
+          default: "No Occurrence"
+        },
       occured: {type: Number, default: 0},
       key: {type: String},
       lastTaskId: {type: Number, default: 0},
