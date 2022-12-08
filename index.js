@@ -14,6 +14,9 @@ const PaytmChecksum = require("./PaytmChecksum")
 const formidable  = require('formidable')
 require("dotenv").config()
 
+// const {connect} = require("./db-connection")
+// connect()
+
 const jiraConnect = require("./atlassian-connect.json")
 
 // const helloworld = require("./public/helloworld.html")
@@ -23,7 +26,7 @@ const { socketConnection } = require('./socket');
 const app = express()
 const Server = require('http').Server(app);
 socketConnection(Server);
-const port = process.env.PORT || 3005
+const port = process.env.PORT || 3002
 
 //MIDDLEWAREs
 app.use(cors())
@@ -35,7 +38,10 @@ app.use(bodyParser.json())
 
 //DATABSE CONNECTION
 mongoose
-  .connect(process.env.DATABASE, {
+  .connect(process.env.DATABASE1, {
+  //   socketTimeoutMS: 45000,
+  // keepAlive: true,
+  // reconnectTries: 10,
     useNewUrlParser: true,
     useUnifiedTopology: true,
     // useCreateIndex: true,
