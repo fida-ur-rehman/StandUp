@@ -256,7 +256,7 @@ class Standup {
       
                 const newRule = new RRule(occurrence)
                 let inWord = newRule.toText()
-      
+                occurrence.inWord = inWord
                 let memberSetup = new Promise((resolve, reject) => {
       
                   if(!statusTypes || statusTypes === null) {
