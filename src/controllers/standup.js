@@ -253,6 +253,7 @@ class Standup {
       
                 occurrence.dtstart = newStartDate1
                
+                delete occurrence.inWord
       
                 const newRule = new RRule(occurrence)
                 let inWord = newRule.toText()
