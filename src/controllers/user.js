@@ -348,11 +348,11 @@ async joinOrganisation(req, res) {
         let newConfirmPassword = confirmPassword.toString();
         if(newPassword === newConfirmPassword) {
           const _password = await bcrypt.hash(newPassword, 10);
-          userModel.findOneAndUpdate({email}, {$set: {password: _password}})
+          userModel.findOneAndUpdate({email}, {$set: {password: _password}}).select("name role roleType email company title organisations")
           .then((updated) => {
             if(updated) {
               // let accessToken = jwt.sign({ data: email }, JWT_AUTH_TOKEN, { expiresIn: '60s' });
-              let refreshToken = jwt.sign({ data: email }, JWT_REFRESH_TOKEN, { expiresIn: '1y' });
+              let refreshToken = jwt.sign({ data: updated }, JWT_REFRESH_TOKEN, { expiresIn: '1y' });
               return res.status(200).json({ result: refreshToken, msg: "Success"});
             } else {
               return res.status(201).json({ result: "Not Found", msg: "Error"});
