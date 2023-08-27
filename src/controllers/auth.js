@@ -70,7 +70,7 @@ class Auth {
       if(!email || !pin){
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
-        userModel.findOne({email})
+        userModel.findOne({email}).select("name role roleType email company title organisations")
         .then((user) => {
           if(user.verified === false){
             return res.status(201).json({ result: "Email Not Verified", msg: "Error"});
@@ -80,7 +80,7 @@ class Auth {
             let newPin = pin.toString();
             bcrypt.compare(newPin, user.pin, function(err, result) {
               if(result == true) {
-                let refreshToken = jwt.sign({ data: email }, JWT_REFRESH_TOKEN, { expiresIn: '1y' });
+                let refreshToken = jwt.sign({ data: user }, JWT_REFRESH_TOKEN, { expiresIn: '1y' });
                 return res.status(200).json({ result: refreshToken, msg: "Success"});
               } else {
                 return res.status(201).json({ result: "Incorrect", msg: "Error"});
@@ -101,7 +101,7 @@ class Auth {
       if(!email || !password){
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
-        userModel.findOne({email})
+        userModel.findOne({email}).select("name role roleType email company title organisations")
         .then((user) => {
           if(user.verified === false){
             return res.status(201).json({ result: "Email Not Verified", msg: "Error"});
@@ -111,7 +111,7 @@ class Auth {
             let newPassword = password.toString();
             bcrypt.compare(newPassword, user.password, function(err, result) {
               if(result == true) {
-                let refreshToken = jwt.sign({ data: email }, JWT_REFRESH_TOKEN, { expiresIn: '1y' });
+                let refreshToken = jwt.sign({ data: user }, JWT_REFRESH_TOKEN, { expiresIn: '1y' });
                 return res.status(200).json({ result: refreshToken, msg: "Success"});
               } else {
                 return res.status(201).json({ result: "Incorrect", msg: "Error"});
