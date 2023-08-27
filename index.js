@@ -84,7 +84,7 @@ app.use("/api/joinReq", require("./src/routes/joinRequest"));
 
 
 app.get('/home', (req, res) => {
-  res.send('Hello World!')
+  res.send('Hello World! 1')
 })
 
 app.get('/atlassian-connect.json', (req, res) => {

@@ -8,6 +8,7 @@ module.exports.isAuthorized  = function(req, res, next) {
             return res.status(401).json({ result: "Unauthorised", msg: "Error"});
         } else {
             let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
+            console.log(decoded)
             userModel.findOne({email: decoded.data.email}).then((user) => {
                 req.user = user  
                     if (user === null) {     

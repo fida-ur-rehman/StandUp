@@ -8,7 +8,7 @@ module.exports.isAdmin  = function(req, res, next) {
             return res.status(401).json({ result: "Unauthorised", msg: "Error"});
         } else {
             let decoded = jwt.verify(req.headers.token, process.env.JWT_REFRESH_TOKEN);
-            userModel.findOne({email: decoded.data}).then((user) => {
+            userModel.findOne({email: decoded.data.email}).then((user) => {
                 req.user = user  
                     if (user === null || user.role === "User") {     
                         return res.status(401).json({ result: "Unauthorised", msg: "Error"});
