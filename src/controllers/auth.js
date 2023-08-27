@@ -46,9 +46,10 @@ class Auth {
 
         if (newCalculatedHash === hashValue) {
           console.log('user confirmed');
-          let user = await userModel.findOneAndUpdate({email}, {$set: {verified: true}})
+          let user = await userModel.findOneAndUpdate({email}, {$set: {verified: true}}).select("name role roleType email company title organisations")
             if (user){
-                  res.status(200).send({result: "Verified", msg: "Success"})
+              let token = jwt.sign({ data: user }, JWT_REFRESH_TOKEN, { expiresIn: '1d' });
+                  res.status(200).send({result: "Verified", token, msg: "Success"})
             } else {
               return res.status(201).send({ result: "Not Found", msg: 'Success' });
             }

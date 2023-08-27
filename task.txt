@@ -1,0 +1,36 @@
+
+Backend
+
+1. Insights (efficiency Table, Task Table) 2 days
+
+
+2. Billing and Transaction (Invoice Download, save transaction after Payment Success) 1 day
+3. Real time server status (Api end point to get server status)
+4. Join Request (Organisation join req)
+8. Email service (Otp, Invoice, // Promotional)
+
+
+5. Mongodb Self server Documentation 1 day
+
+// 6. Mongodb User access Control 
+7. Admin and Owner Validation 1 day
+
+9. Deployment 1 day
+// 10. Keeping sensitive data encrypted
+
+
+
+Front end
+
+1. Admin and Owner Validation 
+2. Insights 
+3. export 
+4. Billing And transaction
+5. Plan Consumption
+6. status status (Comment Adjustment, Id redirect)
+7. insights Mobile Screen
+8. Description Field Layout as per teams App
+9. Join Req and Invitation req
+
+
+

@@ -30,11 +30,30 @@ class Organisation {
           if(!organisationId) {
             return res.status(201).json({ result: "Data Missing", msg: "Error"});
           } else {
-            let _organisation = await organisationModel.findOne({_id: mongoose.Types.ObjectId(organisationId)})
-            if (_organisation) {
+            console.log(req.user)
+            if(req.user.role === "Admin") {
+              let _organisation = await organisationModel.findOne({_id: mongoose.Types.ObjectId(organisationId)})
+              if (_organisation) {
+              return res.status(200).json({ result: _organisation, msg: "Success"});
+              } else {
+                return res.status(201).json({ result: "Not Found", msg: "Error"});
+              } 
+            } else if(req.user.role === "User") {
+              let _organisation = await organisationModel.findOne({_id: mongoose.Types.ObjectId(organisationId)})
+            if (_organisation ) {
+              let auth = await req.user.organisations.some(
+                (org) => org.organisationId === mongoose.Types.ObjectId(organisationId)
+                
+              );
+              console.log(auth)
+              if(auth){
             return res.status(200).json({ result: _organisation, msg: "Success"});
+              } else {
+            return res.status(200).json({ result: "Access Denied", msg: "Success"});
+              }
             } else {
               return res.status(201).json({ result: "Not Found", msg: "Error"});
+            }
             }
           }
       } catch (err) {
@@ -50,7 +69,16 @@ class Organisation {
           return res.status(201).json({ result: "Data Missing", msg: "Error"});
         } else {
           let _users = await userModel.aggregate([
-            {$match: {"organisations.organisationId": mongoose.Types.ObjectId(organisationId)}}
+            {$match: {"organisations.organisationId": mongoose.Types.ObjectId(organisationId)}},
+            {$project: {
+              "name": 1,
+              "role": 1,
+              "roleType": 1,
+              "email": 1,
+              "company": 1,
+              "title": 1,
+              "organisations": 1
+            }}
           ])
           if (_users) {
           return res.status(200).json({ result: _users, msg: "Success"});

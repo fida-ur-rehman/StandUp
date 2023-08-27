@@ -12,6 +12,7 @@ const statusSchema = new mongoose.Schema(
     userName: {type: String, require: true, default: "No Name"},
     taskId: {type: ObjectId, ref: "Task"},
     status: {},
+    comments: []
   },
   { timestamps: true }
 );
