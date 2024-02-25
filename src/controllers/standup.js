@@ -22,6 +22,7 @@ const moment = require('moment');
 const { RRule, RRuleSet, rrulestr } = require('rrule');
 const { taskModel } = require("../models/task");
 const { organisationModel } = require("../models/organisation");
+const { addedToStandup } = require("../middleware/emailService");
 
 function checkIfToday(rruleStr){
   let rule = new RRule(rruleStr);
@@ -226,16 +227,17 @@ class Standup {
     try {
       let { name, organisationId, teamName, members, includeMe, statusTypes, start, end, occurrence, key, description} = req.body
       console.log( name, organisationId, teamName, members, includeMe, statusTypes, start, end, occurrence, key, description)
-      if(!name || !organisationId || !teamName || !members || !includeMe || !start || !end || !occurrence || !key || !description) {
+      if(!name || !organisationId || !teamName || !members || !start || !end || !occurrence || !key || !description) {
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
         let userOrg = req.user.organisations.find( org => org['organisationId'] == organisationId)
+        console.log(req.user)
         if(!userOrg) {
           return res.status(201).json({ result: "Permission Required", msg: "Error"});
         } else {
           let _org1 = await organisationModel.findOne({_id: mongoose.Types.ObjectId(organisationId)}) 
           if(_org1) {
-            if(userOrg.role === "ADMIN" || userOrg.permissions.includes("STANDUP-CREATOR")) {
+            if(userOrg.role === "ADMIN" || userOrg.permissions.includes("STANDUP-CREATOR")) { //
               if(_org1.plan.standups <= _org1.plan.CStandups) {
                 return res.status(201).json({ result: "Plan Exceeds", msg: "Error"});
               } else {
@@ -317,6 +319,15 @@ class Standup {
                         if(created) {
                           let _org = await organisationModel.updateOne({_id: organisationId}, {$inc: {"plan.Cstandups": 1}})
                           activity(created._id, "New StandUp", "Standup", _users, null, null, null, req.user.name)
+                          members.forEach(user => {
+                            addedToStandup(user, "fida@synxup.awsapps.com", name, req.user.name)
+                            .then((send) => {
+                              console.log("Added :", send)
+                            })
+                            .catch((err) => {
+                              console.log("Error in Adding", err);
+                              });
+                          });
                           return res.status(200).json({ result: created, msg: "Success"});
                         }
 

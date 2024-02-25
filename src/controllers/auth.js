@@ -4,7 +4,8 @@ const crypto = require("crypto")
 const bcrypt = require("bcrypt")
 
 const {validateEmail} = require("../config/function")
-const {validatePhoneNumber} = require("../config/function")
+const {validatePhoneNumber} = require("../config/function");
+const { sesOTP } = require("../middleware/emailService");
 
 let JWT_AUTH_TOKEN = process.env.JWT_AUTH_TOKEN;
 let JWT_REFRESH_TOKEN = process.env.JWT_REFRESH_TOKEN;
@@ -21,8 +22,14 @@ class Auth {
         let hash = crypto.createHmac('sha256', process.env.SECRETKEY).update(data).digest('hex');
         let fullHash = `${hash}.${expires}`;
 
-        console.log("OTP:" +""+otp)
-        res.status(200).send({ email, hash: fullHash, otp });  // this bypass otp via api only for development instead hitting twilio api all the time
+        // sesOTP(email, "fida@synxup.awsapps.com", otp, "", "")
+        // .then((send) => {
+        //   console.log(send)
+          res.status(200).send({ email, hash: fullHash});  // this bypass otp via api only for development instead hitting twilio api all the time
+        // })
+        // .catch((err) => {
+        //   console.log("There was an error!", err);
+        //   });
   };
 
   async verifyOTP(req, res){
@@ -101,7 +108,7 @@ class Auth {
       if(!email || !password){
         return res.status(201).json({ result: "Data Missing", msg: "Error"});
       } else {
-        userModel.findOne({email}).select("name role roleType email company title organisations")
+        userModel.findOne({email}).select("name role roleType email company title organisations password")
         .then((user) => {
           if(user.verified === false){
             return res.status(201).json({ result: "Email Not Verified", msg: "Error"});
@@ -109,6 +116,7 @@ class Auth {
             return res.status(201).json({ result: "Password Setup Remaining", msg: "Error"});
           } else {
             let newPassword = password.toString();
+            console.log(newPassword, user.password)
             bcrypt.compare(newPassword, user.password, function(err, result) {
               if(result == true) {
                 let refreshToken = jwt.sign({ data: user }, JWT_REFRESH_TOKEN, { expiresIn: '1y' });
