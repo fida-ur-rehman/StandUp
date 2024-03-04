@@ -223,6 +223,27 @@ class Standup {
     }
 }
 
+async standupUser(req, res) {
+  try {
+    let {standupId} = req.body
+    if(!standupId) {
+      return res.status(201).json({ result: "Data Missing", msg: "Error"});
+
+    } else {
+      let _standup = await standupModel.find({_id: mongoose.Types.ObjectId(standupId)})
+      .populate({"path": "members.user.details", "select": "_id name email company title img"})
+      .select("members.user")
+
+return res.status(200).json({ result: _standup, msg: "Success"});
+    }
+
+        
+  } catch (err) {
+        console.log(err)
+        res.status(500).json({ result: err, msg: "Error"});
+  }
+}
+
   async createStandup(req, res) {
     try {
       let { name, organisationId, teamName, members, includeMe, statusTypes, start, end, occurrence, key, description} = req.body
