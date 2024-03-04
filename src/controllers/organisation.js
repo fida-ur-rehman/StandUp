@@ -45,12 +45,12 @@ class Organisation {
                 (org) => org.organisationId === mongoose.Types.ObjectId(organisationId)
                 
               );
-              console.log(auth)
-              if(auth){
+              // console.log(auth)
+              // if(auth){
             return res.status(200).json({ result: _organisation, msg: "Success"});
-              } else {
-            return res.status(200).json({ result: "Access Denied", msg: "Success"});
-              }
+            //   } else {
+            // return res.status(200).json({ result: "Access Denied", msg: "Success"});
+            //   }
             } else {
               return res.status(201).json({ result: "Not Found", msg: "Error"});
             }
