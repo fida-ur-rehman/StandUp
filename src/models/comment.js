@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Schema.Types;
 
-const collections = ['Task', 'User'];
+const collections = ['Task', 'Status'];
 
 const commentSchema = new mongoose.Schema(
   {

@@ -7,6 +7,7 @@ router.get("/all", statusController.allStatus);
 router.post("/single", isAuthorized, statusController.getStatus);
 
 router.post("/standupUser", statusController.standupUserStatus);
+router.post("/standupUserDate", statusController.standupUserStatusDate);
 router.post("/create", isAuthorized, statusController.craeteStatus);
 router.post("/edit", isAuthorized, statusController.editStatus);
 router.post("/delete", isAuthorized, statusController.deleteStatus);

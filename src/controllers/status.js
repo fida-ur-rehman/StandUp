@@ -76,6 +76,56 @@ class Status {
     }
 }
 
+async standupUserStatusDate(req, res) {
+  try {
+      let { standupId, userId, date } = req.body; // Include date in request body
+      if (!standupId || !userId || !date) {
+          return res.status(400).json({ result: "Data Missing", msg: "Error" });
+      } else {
+          let status = await statusModel.aggregate([
+              {
+                  $match:
+                  {
+                      standupId: new mongoose.Types.ObjectId(standupId),
+                      userId: new mongoose.Types.ObjectId(userId),
+                      createdAt: {
+                        $gte: new Date(date), // Start of the day
+                        $lt: new Date(new Date(date).setDate(new Date(date).getDate() + 1)) // End of the day
+                    }
+                  }
+              }
+          ]);
+
+          let comments = await commentModel.aggregate([
+              {
+                  $match:
+                  {
+                      standupId: new mongoose.Types.ObjectId(standupId),
+                      entityId: new mongoose.Types.ObjectId(userId),
+                      createdAt: {
+                        $gte: new Date(date), // Start of the day
+                        $lt: new Date(new Date(date).setDate(new Date(date).getDate() + 1)) // End of the day
+                    }
+                  }
+              }
+          ]);
+
+          // console.log(status);
+          // console.log(comments);
+
+          if (status.length > 0) {
+            return res.status(200).json({ result: { status, comments}, msg: "Success" });
+        } else {
+            return res.status(200).json({ result: { status: "No status" }, msg: "Success" });
+        }
+      }
+  } catch (err) {
+      console.log(err);
+      res.status(500).json({ result: err, msg: "Error" });
+  }
+}
+
+
 async standupStatus(req, res) {
     try {
         let { standupId} = req.body;
